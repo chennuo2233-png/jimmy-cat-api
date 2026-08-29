@@ -49,6 +49,11 @@ export async function confirmPaymentCompliance() {
   return res.data
 }
 
+export async function saveUSDTBEP20Config(request: { password: string; rpc_url: string; addresses: string[] }) {
+  const res = await api.post('/api/option/usdt-bep20/save', request)
+  return res.data
+}
+
 export async function startLogCleanupTask(targetTimestamp: number) {
   const res = await api.post<SystemTaskResponse<LogCleanupTask>>(
     '/api/system-task/log-cleanup',

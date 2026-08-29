@@ -29,6 +29,7 @@ const (
 	PaymentMethodCreem        = "creem"
 	PaymentMethodWaffo        = "waffo"
 	PaymentMethodWaffoPancake = "waffo_pancake"
+	PaymentMethodUSDTBEP20    = "usdt_bep20"
 	PaymentMethodBalance      = "balance"
 )
 
@@ -38,6 +39,7 @@ const (
 	PaymentProviderCreem        = "creem"
 	PaymentProviderWaffo        = "waffo"
 	PaymentProviderWaffoPancake = "waffo_pancake"
+	PaymentProviderUSDTBEP20    = "usdt_bep20"
 	PaymentProviderBalance      = "balance"
 )
 
@@ -120,6 +122,21 @@ func creditTopUpQuota(tx *gorm.DB, userId int, creditedQuota int, updates map[st
 func (topUp *TopUp) Update() error {
 	var err error
 	err = DB.Save(topUp).Error
+	return err
+}
+
+func RechargeUSDTBEP20(tradeNo string) error {
+	var topUp TopUp
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil { return err }
+		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 { return ErrPaymentMethodMismatch }
+		if topUp.Status == common.TopUpStatusSuccess { return nil }
+		if topUp.Status != common.TopUpStatusPending { return ErrTopUpStatusInvalid }
+		if err := creditTopUpQuota(tx, topUp.UserId, int(topUp.Amount), nil); err != nil { return err }
+		topUp.Status, topUp.CompleteTime = common.TopUpStatusSuccess, common.GetTimestamp()
+		return tx.Save(&topUp).Error
+	})
+	if err == nil { syncCreditUserQuotaCache(topUp.UserId, int(topUp.Amount), "usdt bep20 topup") }
 	return err
 }
 

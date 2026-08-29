@@ -27,12 +27,14 @@ import {
   calculateWaffoPancakeAmount,
   requestPayment,
   requestStripePayment,
+  requestUSDTBEP20Payment,
   isApiSuccess,
 } from '../api'
 import {
   isStripePayment,
   isWaffoPayment,
   isWaffoPancakePayment,
+  isUSDTBEP20Payment,
   submitPaymentForm,
 } from '../lib'
 import type { AmountRequest, AmountResponse } from '../types'
@@ -112,7 +114,20 @@ export function usePayment() {
         setProcessing(true)
 
         const isStripe = isStripePayment(paymentType)
+        const isUSDT = isUSDTBEP20Payment(paymentType)
         const amount = Math.floor(topupAmount)
+
+        if (isUSDT) {
+          const response = await requestUSDTBEP20Payment(amount)
+          if (isApiSuccess(response) && response.data) {
+            const data = response.data as { address: string; amount: string; order_id: string }
+            window.sessionStorage.setItem('usdt-bep20-order', JSON.stringify(data))
+            window.location.hash = 'usdt-bep20-payment'
+            return true
+          }
+          toast.error(response.message || i18next.t('Payment request failed'))
+          return false
+        }
 
         const response = isStripe
           ? await requestStripePayment({

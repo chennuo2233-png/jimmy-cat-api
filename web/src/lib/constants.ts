@@ -22,7 +22,9 @@ For commercial licensing, please contact support@quantumnous.com
 
 // System Configuration Defaults
 export const DEFAULT_SYSTEM_NAME = 'New API'
-export const DEFAULT_LOGO = '/logo.png'
+// Bundled with the application so the JMM Cat brand does not rely on a
+// third-party image host. Administrators can still override this in Settings.
+export const DEFAULT_LOGO = '/jmm-cat-logo-round.png'
 
 // LocalStorage Keys
 export const STORAGE_KEYS = {

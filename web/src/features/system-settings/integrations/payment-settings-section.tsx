@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Code2, Eye, ShieldAlert } from 'lucide-react'
+import { Code2, Eye, Loader2, ShieldAlert } from 'lucide-react'
 import * as React from 'react'
 import { useForm, type Resolver } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -48,7 +48,7 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-import { confirmPaymentCompliance } from '../api'
+import { confirmPaymentCompliance, saveUSDTBEP20Config } from '../api'
 import {
   SettingsForm,
   SettingsSwitchContent,
@@ -222,6 +222,10 @@ export function PaymentSettingsSection({
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
+  const [usdtRPCURL, setUSDTBEP20RPCURL] = React.useState('')
+  const [usdtAddresses, setUSDTBEP20Addresses] = React.useState('')
+  const [usdtPassword, setUSDTBEP20Password] = React.useState('')
+  const [savingUSDT, setSavingUSDT] = React.useState(false)
   const queryClient = useQueryClient()
   const updateOption = useUpdateOption()
   const initialFormValues = React.useMemo<PaymentFormValues>(
@@ -877,13 +881,14 @@ export function PaymentSettingsSection({
           />
           <Tabs defaultValue='general' className='min-w-0'>
             <div className='overflow-x-auto pb-1'>
-              <TabsList className='grid min-w-[44rem] grid-cols-6'>
+              <TabsList className='grid min-w-[52rem] grid-cols-7'>
                 <TabsTrigger value='general'>{t('General')}</TabsTrigger>
                 <TabsTrigger value='epay'>Epay</TabsTrigger>
                 <TabsTrigger value='stripe'>{t('Stripe')}</TabsTrigger>
                 <TabsTrigger value='creem'>Creem</TabsTrigger>
                 <TabsTrigger value='waffo-pancake'>Waffo Pancake</TabsTrigger>
                 <TabsTrigger value='waffo'>Waffo</TabsTrigger>
+                <TabsTrigger value='usdt-bep20'>USDT BEP-20</TabsTrigger>
               </TabsList>
             </div>
 
@@ -1625,6 +1630,14 @@ export function PaymentSettingsSection({
                 payMethods={waffoPayMethods}
                 onPayMethodsChange={setWaffoPayMethods}
               />
+            </TabsContent>
+            <TabsContent value='usdt-bep20' className={paymentTabContentClassName}>
+              <div className='space-y-4'>
+                <FormItem><FormLabel>{t('BSC RPC URL')}</FormLabel><Input type='password' value={usdtRPCURL} onChange={(event) => setUSDTBEP20RPCURL(event.target.value)} placeholder='https://rpc.ankr.com/bsc/...' /></FormItem>
+                <FormItem><FormLabel>{t('Receiving wallet addresses')}</FormLabel><Input value={usdtAddresses} onChange={(event) => setUSDTBEP20Addresses(event.target.value)} placeholder='0x..., 0x...' /></FormItem>
+                <FormItem><FormLabel>{t('Current password')}</FormLabel><Input type='password' value={usdtPassword} onChange={(event) => setUSDTBEP20Password(event.target.value)} /></FormItem>
+                <Button type='button' disabled={savingUSDT} onClick={async () => { setSavingUSDT(true); try { const result = await saveUSDTBEP20Config({ password: usdtPassword, rpc_url: usdtRPCURL, addresses: usdtAddresses.split(',').map((value) => value.trim()).filter(Boolean) }); if (result.success) { toast.success(t('USDT BEP-20 settings saved')); setUSDTBEP20Password('') } else toast.error(result.message || t('Failed to save settings')) } catch (error) { toast.error(error instanceof Error ? error.message : t('Failed to save settings')) } finally { setSavingUSDT(false) } }}>{savingUSDT && <Loader2 className='mr-2 size-4 animate-spin' />}{t('Save')}</Button>
+              </div>
             </TabsContent>
           </Tabs>
         </SettingsForm>

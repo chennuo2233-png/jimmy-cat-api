@@ -181,6 +181,16 @@ export async function requestWaffoPancakePayment(
   return res.data
 }
 
+export async function requestUSDTBEP20Payment(amount: number) {
+  const res = await api.post('/api/user/usdt-bep20/pay', { amount })
+  return res.data
+}
+
+export async function confirmUSDTBEP20Payment(orderId: string, txHash: string) {
+  const res = await api.post('/api/user/usdt-bep20/confirm', { order_id: orderId, tx_hash: txHash })
+  return res.data
+}
+
 /**
  * Get affiliate code
  */
