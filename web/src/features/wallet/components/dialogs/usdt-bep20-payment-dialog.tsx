@@ -90,9 +90,6 @@ export function USDTBEP20PaymentDialog() {
     await navigator.clipboard.writeText(value)
     toast.success(t('Copied'))
   }
-  const value = order
-    ? `ethereum:0x55d398326f99059ff775485246999027b3197955@56/transfer?address=${order.address}&uint256=${order.amount.replace('.', '').padEnd(18, '0')}`
-    : ''
   const expired = !!order && order.expires_at * 1000 <= Date.now() && !order.cdk
 
   return (
@@ -122,15 +119,30 @@ export function USDTBEP20PaymentDialog() {
             ) : (
               <>
                 <div className='flex justify-center'>
-                  <QRCodeSVG value={value} size={180} />
+                  <QRCodeSVG
+                    value={order.address}
+                    size={192}
+                    level='M'
+                    includeMargin
+                  />
                 </div>
-                <Button variant='outline' className='w-full break-all' onClick={() => copy(order.address)}>
-                  {order.address}
-                  <Copy className='ml-2 size-4 shrink-0' />
+                <Button
+                  variant='outline'
+                  className='h-auto w-full items-start justify-between gap-3 px-3 py-2.5 text-left'
+                  onClick={() => copy(order.address)}
+                >
+                  <span className='min-w-0 flex-1 break-all font-mono text-xs leading-5 sm:text-sm'>
+                    {order.address}
+                  </span>
+                  <Copy className='mt-0.5 size-4 shrink-0' />
                 </Button>
-                <Button variant='outline' className='w-full font-mono' onClick={() => copy(order.amount)}>
-                  {order.amount} USDT
-                  <Copy className='ml-2 size-4 shrink-0' />
+                <Button
+                  variant='outline'
+                  className='h-auto w-full justify-between gap-3 px-3 py-2.5 font-mono'
+                  onClick={() => copy(order.amount)}
+                >
+                  <span className='min-w-0 break-all'>{order.amount} USDT</span>
+                  <Copy className='size-4 shrink-0' />
                 </Button>
                 <p className='text-muted-foreground text-center text-sm'>
                   {expired ? t('This payment order has expired.') : t('Payment is checked automatically after 12 BSC confirmations.')}
