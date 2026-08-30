@@ -1,0 +1,8 @@
+www.jmmredeem.online {
+	redir https://jmmredeem.online{uri} permanent
+}
+
+jmmredeem.online, api.jmmredeem.online {
+	encode zstd gzip
+	reverse_proxy new-api:3000
+}
