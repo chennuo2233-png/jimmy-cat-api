@@ -3,12 +3,14 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/constant"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/service"
+	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 )
 
@@ -22,6 +24,7 @@ func RegisterScheduledSystemTasks() {
 	service.RegisterSystemTaskHandler(modelUpdateHandler{})
 	service.RegisterSystemTaskHandler(midjourneyPollHandler{})
 	service.RegisterSystemTaskHandler(asyncTaskPollHandler{})
+	service.RegisterSystemTaskHandler(usdtBEP20ScanHandler{})
 }
 
 // channelTestHandler runs the scheduled "test all channels" job. Enablement and
@@ -150,6 +153,27 @@ func (asyncTaskPollHandler) NewPayload() any { return nil }
 func (asyncTaskPollHandler) Run(ctx context.Context, task *model.SystemTask, runnerID string) {
 	summary := service.RunTaskPollingOnce(ctx, service.NewSystemTaskProgressReporter(task, runnerID))
 	finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusSucceeded, summary, nil)
+}
+
+type usdtBEP20ScanHandler struct{}
+
+func (usdtBEP20ScanHandler) Type() string { return model.SystemTaskTypeUSDTBEP20Scan }
+
+func (usdtBEP20ScanHandler) Enabled() bool {
+	return strings.TrimSpace(setting.USDTBEP20RPCURL) != "" && strings.TrimSpace(setting.USDTBEP20Addresses) != ""
+}
+
+func (usdtBEP20ScanHandler) Interval() time.Duration { return 15 * time.Second }
+
+func (usdtBEP20ScanHandler) NewPayload() any { return nil }
+
+func (usdtBEP20ScanHandler) Run(ctx context.Context, task *model.SystemTask, runnerID string) {
+	completed, err := ScanUSDTBEP20PendingOrders(ctx)
+	if err != nil {
+		finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusFailed, nil, err)
+		return
+	}
+	finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusSucceeded, map[string]int{"completed": completed}, nil)
 }
 
 func finishSystemTaskHandler(task *model.SystemTask, runnerID string, status model.SystemTaskStatus, result any, runErr error) {

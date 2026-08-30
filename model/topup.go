@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
@@ -22,6 +23,22 @@ type TopUp struct {
 	CreateTime      int64   `json:"create_time"`
 	CompleteTime    int64   `json:"complete_time"`
 	Status          string  `json:"status"`
+	PaymentAddress  string  `json:"payment_address" gorm:"type:varchar(64);index"`
+	PaymentAmount   string  `json:"payment_amount" gorm:"type:varchar(32);index"`
+	PaymentTxHash   *string `json:"payment_tx_hash,omitempty" gorm:"type:varchar(66);uniqueIndex"`
+	PaymentExpireAt int64   `json:"payment_expire_at" gorm:"bigint;index"`
+	RedemptionId    int     `json:"redemption_id" gorm:"index"`
+}
+
+// USDTBEP20PaymentReference reserves an exact transfer amount for a receiving
+// address. The unique index makes matching safe even when several application
+// instances create payment orders at the same time.
+type USDTBEP20PaymentReference struct {
+	Id            int    `json:"id"`
+	TopUpId       int    `json:"top_up_id" gorm:"uniqueIndex"`
+	Address       string `json:"address" gorm:"type:varchar(64);uniqueIndex:idx_usdt_bep20_reference"`
+	Amount        string `json:"amount" gorm:"type:varchar(32);uniqueIndex:idx_usdt_bep20_reference"`
+	ReservedUntil int64  `json:"reserved_until" gorm:"bigint;index"`
 }
 
 const (
@@ -50,12 +67,42 @@ var (
 	ErrInvalidTopUpQuota        = errors.New("invalid top-up quota")
 	ErrTopUpQuotaLimitExceeded  = errors.New("top-up quota limit exceeded")
 	ErrWalletQuotaLimitExceeded = errors.New("wallet quota limit exceeded")
+	ErrUSDTBEP20AmountReserved  = errors.New("usdt bep20 payment amount is already reserved")
 )
 
 func (topUp *TopUp) Insert() error {
 	var err error
 	err = DB.Create(topUp).Error
 	return err
+}
+
+// CreateUSDTBEP20TopUp creates an order and atomically reserves its exact
+// address/amount pair. References remain unavailable after order expiry for a
+// short grace period, so a delayed transfer cannot be mistaken for a new order.
+func CreateUSDTBEP20TopUp(topUp *TopUp) error {
+	if topUp == nil || topUp.PaymentProvider != PaymentProviderUSDTBEP20 || topUp.PaymentAddress == "" || topUp.PaymentAmount == "" || topUp.PaymentExpireAt <= common.GetTimestamp() {
+		return ErrInvalidTopUpQuota
+	}
+
+	return DB.Transaction(func(tx *gorm.DB) error {
+		now := common.GetTimestamp()
+		if err := tx.Where("reserved_until <= ?", now).Delete(&USDTBEP20PaymentReference{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(topUp).Error; err != nil {
+			return err
+		}
+		reference := &USDTBEP20PaymentReference{
+			TopUpId:       topUp.Id,
+			Address:       topUp.PaymentAddress,
+			Amount:        topUp.PaymentAmount,
+			ReservedUntil: topUp.PaymentExpireAt + int64(2*time.Hour/time.Second),
+		}
+		if err := tx.Create(reference).Error; err != nil {
+			return ErrUSDTBEP20AmountReserved
+		}
+		return nil
+	})
 }
 
 func topUpQuotaMaxCurrent(creditedQuota int) (int, error) {
@@ -128,16 +175,117 @@ func (topUp *TopUp) Update() error {
 func RechargeUSDTBEP20(tradeNo string) error {
 	var topUp TopUp
 	err := DB.Transaction(func(tx *gorm.DB) error {
-		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil { return err }
-		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 { return ErrPaymentMethodMismatch }
-		if topUp.Status == common.TopUpStatusSuccess { return nil }
-		if topUp.Status != common.TopUpStatusPending { return ErrTopUpStatusInvalid }
-		if err := creditTopUpQuota(tx, topUp.UserId, int(topUp.Amount), nil); err != nil { return err }
+		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil {
+			return err
+		}
+		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 {
+			return ErrPaymentMethodMismatch
+		}
+		if topUp.Status == common.TopUpStatusSuccess {
+			return nil
+		}
+		if topUp.Status != common.TopUpStatusPending {
+			return ErrTopUpStatusInvalid
+		}
+		if err := creditTopUpQuota(tx, topUp.UserId, int(topUp.Amount), nil); err != nil {
+			return err
+		}
 		topUp.Status, topUp.CompleteTime = common.TopUpStatusSuccess, common.GetTimestamp()
 		return tx.Save(&topUp).Error
 	})
-	if err == nil { syncCreditUserQuotaCache(topUp.UserId, int(topUp.Amount), "usdt bep20 topup") }
+	if err == nil {
+		syncCreditUserQuotaCache(topUp.UserId, int(topUp.Amount), "usdt bep20 topup")
+	}
 	return err
+}
+
+func GetPendingUSDTBEP20TopUps() ([]TopUp, error) {
+	var orders []TopUp
+	err := DB.Where(
+		"payment_provider = ? AND status = ? AND payment_expire_at > ? AND payment_tx_hash IS NULL",
+		PaymentProviderUSDTBEP20,
+		common.TopUpStatusPending,
+		common.GetTimestamp(),
+	).Find(&orders).Error
+	return orders, err
+}
+
+func GetUSDTBEP20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
+	var topUp TopUp
+	err := DB.Where(
+		"trade_no = ? AND user_id = ? AND payment_provider = ?",
+		tradeNo,
+		userID,
+		PaymentProviderUSDTBEP20,
+	).First(&topUp).Error
+	if err != nil {
+		return nil, err
+	}
+	return &topUp, nil
+}
+
+func GetRedemptionForUSDTBEP20TopUp(topUp *TopUp) (*Redemption, error) {
+	if topUp == nil || topUp.RedemptionId == 0 {
+		return nil, nil
+	}
+	redemption := &Redemption{}
+	if err := DB.Where("id = ? AND user_id = ?", topUp.RedemptionId, topUp.UserId).First(redemption).Error; err != nil {
+		return nil, err
+	}
+	return redemption, nil
+}
+
+func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (*Redemption, error) {
+	if tradeNo == "" || txHash == "" {
+		return nil, ErrInvalidTopUpQuota
+	}
+
+	var issued *Redemption
+	err := DB.Transaction(func(tx *gorm.DB) error {
+		topUp := &TopUp{}
+		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(topUp).Error; err != nil {
+			return ErrTopUpNotFound
+		}
+		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 {
+			return ErrPaymentMethodMismatch
+		}
+		if topUp.Status == common.TopUpStatusSuccess {
+			if topUp.RedemptionId == 0 {
+				return ErrTopUpStatusInvalid
+			}
+			issued = &Redemption{}
+			return tx.Where("id = ?", topUp.RedemptionId).First(issued).Error
+		}
+		if topUp.Status != common.TopUpStatusPending || topUp.PaymentExpireAt <= common.GetTimestamp() || topUp.PaymentTxHash != nil {
+			return ErrTopUpStatusInvalid
+		}
+
+		key, err := common.GenerateRandomCharsKey(32)
+		if err != nil {
+			return err
+		}
+		issued = &Redemption{
+			UserId:      topUp.UserId,
+			Key:         key,
+			Status:      common.RedemptionCodeStatusEnabled,
+			Name:        "USDT BEP-20 " + topUp.TradeNo,
+			Quota:       int(topUp.Amount),
+			CreatedTime: common.GetTimestamp(),
+		}
+		if err := tx.Create(issued).Error; err != nil {
+			return err
+		}
+
+		topUp.PaymentTxHash = &txHash
+		topUp.CompleteTime = common.GetTimestamp()
+		topUp.Status = common.TopUpStatusSuccess
+		topUp.RedemptionId = issued.Id
+		return tx.Save(topUp).Error
+	})
+	if err != nil {
+		return nil, err
+	}
+	return issued, nil
 }
 
 func GetTopUpById(id int) *TopUp {

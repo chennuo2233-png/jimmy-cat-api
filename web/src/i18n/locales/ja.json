@@ -5335,5 +5335,12 @@
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V 4",
     "Zoom": "ズーム"
-  }
+  },
+  "Payment received. Your redemption code is ready.": "支払いを確認しました。引換コードが発行されました。",
+  "This payment order has expired.": "この支払い注文は期限切れです。",
+  "Payment is checked automatically after 12 BSC confirmations.": "BSCで12ブロック確認後に自動確認されます。",
+  "BSC RPC URL": "BSC RPC URL",
+  "Receiving wallet addresses": "受取ウォレットアドレス",
+  "Current password": "現在のパスワード",
+  "USDT BEP-20 settings saved": "USDT BEP-20の設定を保存しました"
 }

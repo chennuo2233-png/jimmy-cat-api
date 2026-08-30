@@ -1,63 +1,282 @@
 package controller
 
 import (
+	"bytes"
+	"context"
+	"crypto/rand"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
-	"github.com/shopspring/decimal"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
-// RequestUSDTBEP20Pay creates a pending, user-bound order. The wallet UI uses
-// the returned address and amount, then polls the confirmation endpoint.
-func RequestUSDTBEP20Pay(c *gin.Context) {
-	var req struct { Amount int64 `json:"amount"` }
-	if err := c.ShouldBindJSON(&req); err != nil || req.Amount <= 0 { c.JSON(http.StatusBadRequest, gin.H{"message":"error","data":"invalid amount"}); return }
-	addresses := strings.Split(strings.TrimSpace(setting.USDTBEP20Addresses), ",")
-	if strings.TrimSpace(setting.USDTBEP20RPCURL) == "" || len(addresses) == 0 || strings.TrimSpace(addresses[0]) == "" { c.JSON(http.StatusServiceUnavailable, gin.H{"message":"error","data":"USDT BEP-20 is not configured"}); return }
-	userID := c.GetInt("id")
-	if rejectInvalidTopUpQuota(c, userID, req.Amount) { return }
-	tradeNo := fmt.Sprintf("USDT_BEP20-%d-%d", userID, time.Now().UnixNano())
-	// The final decimal suffix makes a shared receiving address attributable to one live order.
-	money := float64(req.Amount)/float64(common.QuotaPerUnit) + float64(time.Now().UnixNano()%9000+1000)/1e8
-	order := &model.TopUp{UserId:userID, Amount:req.Amount, Money:money, TradeNo:tradeNo, PaymentMethod:model.PaymentMethodUSDTBEP20, PaymentProvider:model.PaymentProviderUSDTBEP20, CreateTime:time.Now().Unix(), Status:common.TopUpStatusPending}
-	if err := order.Insert(); err != nil { common.ApiError(c, err); return }
-	c.JSON(http.StatusOK, gin.H{"message":"success","data":gin.H{"order_id":tradeNo,"address":strings.TrimSpace(addresses[int(time.Now().UnixNano())%len(addresses)]),"amount":fmt.Sprintf("%.6f", money),"network":"BEP-20","expires_at":time.Now().Add(30*time.Minute).Unix()}})
+const (
+	usdtBEP20Contract              = "0x55d398326f99059ff775485246999027b3197955"
+	transferTopic                  = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	usdtBEP20OrderLifetime         = 30 * time.Minute
+	usdtBEP20RequiredConfirmations = 12
+	usdtBEP20ScanBlockWindow       = int64(1000)
+)
+
+type usdtBEP20OrderResponse struct {
+	OrderID   string `json:"order_id"`
+	Address   string `json:"address"`
+	Amount    string `json:"amount"`
+	Network   string `json:"network"`
+	ExpiresAt int64  `json:"expires_at"`
+	Status    string `json:"status"`
+	CDK       string `json:"cdk,omitempty"`
 }
 
-const usdtBEP20Contract = "0x55d398326f99059ff775485246999027b3197955"
-const transferTopic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-
-func ConfirmUSDTBEP20Pay(c *gin.Context) {
-	var req struct { OrderID string `json:"order_id"`; TxHash string `json:"tx_hash"` }
-	if err := c.ShouldBindJSON(&req); err != nil || !strings.HasPrefix(req.TxHash, "0x") { c.JSON(http.StatusBadRequest, gin.H{"message":"error","data":"invalid transaction"}); return }
-	order := model.GetTopUpByTradeNo(req.OrderID)
-	if order == nil || order.UserId != c.GetInt("id") || order.PaymentProvider != model.PaymentProviderUSDTBEP20 { c.JSON(http.StatusNotFound, gin.H{"message":"error","data":"order not found"}); return }
-	if order.Status == common.TopUpStatusSuccess { c.JSON(http.StatusOK, gin.H{"message":"success","data":"confirmed"}); return }
-	body := strings.NewReader(fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionReceipt","params":["%s"]}`, req.TxHash))
-	response, err := http.Post(setting.USDTBEP20RPCURL, "application/json", body)
-	if err != nil { c.JSON(http.StatusBadGateway, gin.H{"message":"error","data":"RPC unavailable"}); return }
-	defer response.Body.Close()
-	var rpc struct { Result struct { Status string `json:"status"`; Logs []struct { Address string `json:"address"`; Topics []string `json:"topics"`; Data string `json:"data"` } `json:"logs"` } `json:"result"` }
-	if err := common.DecodeJson(response.Body, &rpc); err != nil || rpc.Result.Status != "0x1" { c.JSON(http.StatusOK, gin.H{"message":"pending"}); return }
-	expected := decimal.RequireFromString(fmt.Sprintf("%.6f", order.Money))
-	addresses := strings.Split(strings.ToLower(setting.USDTBEP20Addresses), ",")
-	for _, log := range rpc.Result.Logs {
-		if strings.ToLower(log.Address) != usdtBEP20Contract || len(log.Topics) < 3 || strings.ToLower(log.Topics[0]) != transferTopic { continue }
-		toTopic := strings.TrimPrefix(strings.ToLower(log.Topics[2]), "0x")
-		if len(toTopic) != 64 { continue }
-		to := "0x" + toTopic[24:]
-		matched := false; for _, address := range addresses { if strings.TrimSpace(address) == to { matched = true; break } }; if !matched { continue }
-		amount := new(big.Int); if _, ok := amount.SetString(strings.TrimPrefix(log.Data, "0x"), 16); !ok { continue }
-		paid := decimal.NewFromBigInt(amount, -18); if !paid.Equal(expected) { continue }
-		if err := model.RechargeUSDTBEP20(order.TradeNo); err != nil { common.ApiError(c, err); return }; c.JSON(http.StatusOK, gin.H{"message":"success","data":"confirmed"}); return
+// RequestUSDTBEP20Pay reserves a unique six-decimal USDT amount. The extra
+// 0.001000–0.009999 USDT suffix lets one receiving wallet safely match many
+// concurrent orders without trusting a browser-supplied transaction hash.
+func RequestUSDTBEP20Pay(c *gin.Context) {
+	var req struct {
+		Amount int64 `json:"amount"`
 	}
-	c.JSON(http.StatusOK, gin.H{"message":"pending"})
+	if err := c.ShouldBindJSON(&req); err != nil || req.Amount < getMinTopup() {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error", "data": "invalid amount"})
+		return
+	}
+	addresses := usdtBEP20ReceivingAddresses()
+	if strings.TrimSpace(setting.USDTBEP20RPCURL) == "" || len(addresses) == 0 {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "error", "data": "USDT BEP-20 is not configured"})
+		return
+	}
+
+	userID := c.GetInt("id")
+	creditQuota, err := validateTopUpQuota(req.Amount)
+	if err != nil || model.ValidateTopUpQuotaCapacity(userID, creditQuota) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error", "data": "invalid amount"})
+		return
+	}
+	group, err := model.GetUserGroup(userID, true)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	baseAmount := decimal.NewFromFloat(getPayMoney(req.Amount, group)).Round(2)
+	if !baseAmount.IsPositive() {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error", "data": "invalid amount"})
+		return
+	}
+
+	address := addresses[0]
+	for attempt := 0; attempt < 20; attempt++ {
+		address = addresses[attempt%len(addresses)]
+		suffix, err := rand.Int(rand.Reader, big.NewInt(9000))
+		if err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		paymentAmount := baseAmount.Add(decimal.NewFromInt(suffix.Int64() + 1000).Shift(-6)).StringFixed(6)
+		tradeNo := fmt.Sprintf("USDT_BEP20-%d-%s", userID, common.GetRandomString(16))
+		expiresAt := time.Now().Add(usdtBEP20OrderLifetime).Unix()
+		order := &model.TopUp{
+			UserId:          userID,
+			Amount:          int64(creditQuota),
+			Money:           decimal.RequireFromString(paymentAmount).InexactFloat64(),
+			TradeNo:         tradeNo,
+			PaymentMethod:   model.PaymentMethodUSDTBEP20,
+			PaymentProvider: model.PaymentProviderUSDTBEP20,
+			CreateTime:      common.GetTimestamp(),
+			Status:          common.TopUpStatusPending,
+			PaymentAddress:  address,
+			PaymentAmount:   paymentAmount,
+			PaymentExpireAt: expiresAt,
+		}
+		if err := model.CreateUSDTBEP20TopUp(order); errors.Is(err, model.ErrUSDTBEP20AmountReserved) {
+			continue
+		} else if err != nil {
+			common.ApiError(c, err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success", "data": usdtBEP20OrderResponse{
+			OrderID: tradeNo, Address: address, Amount: paymentAmount, Network: "BEP-20", ExpiresAt: expiresAt, Status: common.TopUpStatusPending,
+		}})
+		return
+	}
+	c.JSON(http.StatusServiceUnavailable, gin.H{"message": "error", "data": "could not reserve a unique payment amount"})
+}
+
+func usdtBEP20ReceivingAddresses() []string {
+	values := strings.Split(strings.ToLower(setting.USDTBEP20Addresses), ",")
+	addresses := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if len(value) == 42 && strings.HasPrefix(value, "0x") {
+			addresses = append(addresses, value)
+		}
+	}
+	return addresses
+}
+
+func GetUSDTBEP20PayStatus(c *gin.Context) {
+	order, err := model.GetUSDTBEP20TopUpForUser(c.Param("order_id"), c.GetInt("id"))
+	if errors.Is(err, model.ErrTopUpNotFound) || order == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "error", "data": "order not found"})
+		return
+	}
+	if order.Status == common.TopUpStatusPending && order.PaymentExpireAt > common.GetTimestamp() {
+		if _, err := scanUSDTBEP20Order(c.Request.Context(), *order); err != nil {
+			common.SysError(fmt.Sprintf("usdt bep20 status scan trade_no=%s: %v", order.TradeNo, err))
+		}
+		order, _ = model.GetUSDTBEP20TopUpForUser(c.Param("order_id"), c.GetInt("id"))
+	}
+	if order == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "error", "data": "order not found"})
+		return
+	}
+	response := usdtBEP20OrderResponse{OrderID: order.TradeNo, Address: order.PaymentAddress, Amount: order.PaymentAmount, Network: "BEP-20", ExpiresAt: order.PaymentExpireAt, Status: order.Status}
+	if order.Status == common.TopUpStatusSuccess {
+		if redemption, err := model.GetRedemptionForUSDTBEP20TopUp(order); err == nil && redemption != nil {
+			response.CDK = redemption.Key
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": response})
+}
+
+// ConfirmUSDTBEP20Pay remains a compatibility endpoint. It does not trust a
+// user-provided transaction hash; the server scans the chain itself.
+func ConfirmUSDTBEP20Pay(c *gin.Context) {
+	var req struct {
+		OrderID string `json:"order_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.OrderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "error", "data": "invalid order"})
+		return
+	}
+	for index, param := range c.Params {
+		if param.Key == "order_id" {
+			c.Params[index].Value = req.OrderID
+			GetUSDTBEP20PayStatus(c)
+			return
+		}
+	}
+	c.Params = append(c.Params, gin.Param{Key: "order_id", Value: req.OrderID})
+	GetUSDTBEP20PayStatus(c)
+}
+
+func ScanUSDTBEP20PendingOrders(ctx context.Context) (int, error) {
+	orders, err := model.GetPendingUSDTBEP20TopUps()
+	if err != nil {
+		return 0, err
+	}
+	completed := 0
+	for _, order := range orders {
+		settled, err := scanUSDTBEP20Order(ctx, order)
+		if err != nil {
+			common.SysError(fmt.Sprintf("usdt bep20 scan trade_no=%s: %v", order.TradeNo, err))
+			continue
+		}
+		if settled {
+			completed++
+		}
+	}
+	return completed, nil
+}
+
+type bscLog struct {
+	Address         string   `json:"address"`
+	Topics          []string `json:"topics"`
+	Data            string   `json:"data"`
+	TransactionHash string   `json:"transactionHash"`
+	BlockNumber     string   `json:"blockNumber"`
+}
+
+func scanUSDTBEP20Order(ctx context.Context, order model.TopUp) (bool, error) {
+	if order.PaymentExpireAt <= common.GetTimestamp() || order.Status != common.TopUpStatusPending {
+		return false, nil
+	}
+	var latestHex string
+	if err := callBSCJSONRPC(ctx, "eth_blockNumber", []any{}, &latestHex); err != nil {
+		return false, err
+	}
+	latest, err := strconv.ParseInt(strings.TrimPrefix(latestHex, "0x"), 16, 64)
+	if err != nil {
+		return false, err
+	}
+	fromBlock := latest - usdtBEP20ScanBlockWindow
+	if fromBlock < 0 {
+		fromBlock = 0
+	}
+	toTopic := "0x" + strings.Repeat("0", 24) + strings.TrimPrefix(strings.ToLower(order.PaymentAddress), "0x")
+	filter := map[string]any{
+		"fromBlock": fmt.Sprintf("0x%x", fromBlock),
+		"toBlock":   "latest",
+		"address":   usdtBEP20Contract,
+		"topics":    []any{transferTopic, nil, toTopic},
+	}
+	var logs []bscLog
+	if err := callBSCJSONRPC(ctx, "eth_getLogs", []any{filter}, &logs); err != nil {
+		return false, err
+	}
+	expected := decimal.RequireFromString(order.PaymentAmount)
+	for _, log := range logs {
+		if strings.ToLower(log.Address) != usdtBEP20Contract || len(log.Topics) < 3 || strings.ToLower(log.Topics[0]) != transferTopic {
+			continue
+		}
+		blockNumber, err := strconv.ParseInt(strings.TrimPrefix(log.BlockNumber, "0x"), 16, 64)
+		if err != nil || latest-blockNumber < usdtBEP20RequiredConfirmations {
+			continue
+		}
+		amount := new(big.Int)
+		if _, ok := amount.SetString(strings.TrimPrefix(log.Data, "0x"), 16); !ok {
+			continue
+		}
+		if !decimal.NewFromBigInt(amount, -18).Equal(expected) {
+			continue
+		}
+		if _, err := model.CompleteUSDTBEP20TopUp(order.TradeNo, strings.ToLower(log.TransactionHash)); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func callBSCJSONRPC(ctx context.Context, method string, params any, result any) error {
+	payload, err := common.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, setting.USDTBEP20RPCURL, bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := service.GetHttpClient().Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("rpc returned HTTP %d", resp.StatusCode)
+	}
+	var response struct {
+		Result json.RawMessage `json:"result"`
+		Error  *struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := common.DecodeJson(resp.Body, &response); err != nil {
+		return err
+	}
+	if response.Error != nil {
+		return errors.New(response.Error.Message)
+	}
+	return common.Unmarshal(response.Result, result)
 }

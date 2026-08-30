@@ -5335,5 +5335,12 @@
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
     "Zoom": "Zoom"
-  }
+  },
+  "Payment received. Your redemption code is ready.": "Đã nhận thanh toán. Mã nạp của bạn đã sẵn sàng.",
+  "This payment order has expired.": "Đơn thanh toán này đã hết hạn.",
+  "Payment is checked automatically after 12 BSC confirmations.": "Thanh toán được tự động kiểm tra sau 12 xác nhận BSC.",
+  "BSC RPC URL": "URL RPC BSC",
+  "Receiving wallet addresses": "Địa chỉ ví nhận tiền",
+  "Current password": "Mật khẩu hiện tại",
+  "USDT BEP-20 settings saved": "Đã lưu cài đặt USDT BEP-20"
 }

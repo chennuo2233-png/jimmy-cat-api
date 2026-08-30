@@ -156,6 +156,9 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if redemption.Status != common.RedemptionCodeStatusEnabled {
 			return errors.New("该兑换码已被使用")
 		}
+		if redemption.UserId != 0 && redemption.UserId != userId {
+			return errors.New("该兑换码不属于当前用户")
+		}
 		if redemption.ExpiredTime != 0 && redemption.ExpiredTime < common.GetTimestamp() {
 			return errors.New("该兑换码已过期")
 		}

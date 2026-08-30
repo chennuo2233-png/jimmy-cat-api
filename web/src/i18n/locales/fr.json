@@ -5335,5 +5335,12 @@
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
     "Zoom": "Zoom"
-  }
+  },
+  "Payment received. Your redemption code is ready.": "Paiement reçu. Votre code d’échange est prêt.",
+  "This payment order has expired.": "Cette commande de paiement a expiré.",
+  "Payment is checked automatically after 12 BSC confirmations.": "Le paiement est vérifié automatiquement après 12 confirmations BSC.",
+  "BSC RPC URL": "URL RPC BSC",
+  "Receiving wallet addresses": "Adresses de portefeuille de réception",
+  "Current password": "Mot de passe actuel",
+  "USDT BEP-20 settings saved": "Paramètres USDT BEP-20 enregistrés"
 }

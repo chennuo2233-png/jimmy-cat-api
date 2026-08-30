@@ -191,6 +191,11 @@ export async function confirmUSDTBEP20Payment(orderId: string, txHash: string) {
   return res.data
 }
 
+export async function getUSDTBEP20PaymentOrder(orderId: string) {
+  const res = await api.get(`/api/user/usdt-bep20/order/${encodeURIComponent(orderId)}`)
+  return res.data
+}
+
 /**
  * Get affiliate code
  */

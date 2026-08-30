@@ -5335,5 +5335,12 @@
     "Zhipu": "智譜",
     "Zhipu V4": "智譜 V4",
     "Zoom": "縮放"
-  }
+  },
+  "Payment received. Your redemption code is ready.": "已確認收款，兌換碼已產生。",
+  "This payment order has expired.": "此付款訂單已過期。",
+  "Payment is checked automatically after 12 BSC confirmations.": "付款將在 BSC 網路確認 12 個區塊後自動核驗。",
+  "BSC RPC URL": "BSC RPC 位址",
+  "Receiving wallet addresses": "收款錢包地址",
+  "Current password": "目前密碼",
+  "USDT BEP-20 settings saved": "USDT BEP-20 設定已儲存"
 }

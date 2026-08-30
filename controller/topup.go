@@ -56,8 +56,24 @@ func GetTopUpInfo(c *gin.Context) {
 
 	// Waffo Pancake is displayed above the standard Waffo gateway.
 	enableWaffoPancake := isWaffoPancakeTopUpEnabled()
-	enableUSDTBEP20 := strings.TrimSpace(setting.USDTBEP20RPCURL) != "" && strings.TrimSpace(setting.USDTBEP20Addresses) != ""
-	if enableUSDTBEP20 { payMethods = append(payMethods, map[string]string{"name":"USDT (BEP-20)", "type":model.PaymentMethodUSDTBEP20, "color":"#26A17B", "min_topup":"1"}) }
+	enableUSDTBEP20 := complianceConfirmed && strings.TrimSpace(setting.USDTBEP20RPCURL) != "" && strings.TrimSpace(setting.USDTBEP20Addresses) != ""
+	if enableUSDTBEP20 {
+		hasUSDTBEP20 := false
+		for _, method := range payMethods {
+			if method["type"] == model.PaymentMethodUSDTBEP20 {
+				hasUSDTBEP20 = true
+				break
+			}
+		}
+		if !hasUSDTBEP20 {
+			payMethods = append(payMethods, map[string]string{
+				"name":      "USDT (BEP-20)",
+				"type":      model.PaymentMethodUSDTBEP20,
+				"color":     "#26A17B",
+				"min_topup": strconv.Itoa(int(getMinTopup())),
+			})
+		}
+	}
 	if enableWaffoPancake {
 		hasWaffoPancake := false
 		for _, method := range payMethods {
