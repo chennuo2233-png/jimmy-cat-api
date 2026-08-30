@@ -1,0 +1,60 @@
+Jimmy Cat Privacy Policy
+
+Version 1.0 (Draft for Legal Review)
+Effective date: 30 August 2026
+
+This Privacy Policy explains how Nuo Chen (陈诺), an individual located in Linping District, Hangzhou, Zhejiang, China ("we", "us", or "Operator"), processes personal information when you use Jimmy Cat at https://jmmredeem.online.
+
+Privacy, deletion, complaint, and data-rights contact: chennuo2233@gmail.com.
+
+1. Information we process
+
+Depending on how you use the Service, we may process:
+
+1. Account information: username, secure password-verification data, account identifier, user group, balance, permissions, and account status. Registration currently does not require an email address.
+2. Technical and security information: IP address, browser and device information, access time, sign-in records, request volume, protected API-key identifiers, error codes, latency, usage, and anti-fraud or security events.
+3. API content and error logs: we do not routinely store complete API prompts or model responses in ordinary logs. For error investigation, safety events, or abuse prevention, limited error logs may contain necessary fragments connected to a failed request, model identifier, timestamp, status code, or technical context.
+4. Payment information: redemption-code records and cryptocurrency wallet addresses, transaction hashes, cryptocurrency type, amount, time, refund records, and anti-fraud handling records.
+5. Information you provide: support emails and attachments, and information reasonably needed for an account-deletion or refund request.
+
+2. Why and on what basis we process information
+
+We process information to provide accounts and API services; calculate and manage balance; diagnose errors and maintain security; prevent fraud and abuse; handle refunds, complaints, and data-rights requests; comply with applicable law and lawful requests; and maintain or improve the Service where necessary.
+
+We process information only on a basis allowed by applicable law, such as performance of the service relationship, your consent, legal obligations, or legitimate security and fraud-prevention interests. Where separate consent is legally required, we will seek it separately.
+
+3. Locations, third parties, and cross-border transfers
+
+Core Service servers are hosted in the Alibaba Cloud Hong Kong region. To complete API requests, we may send necessary request data to third-party AI model service providers; their processing locations may be in Hong Kong, mainland China, or other jurisdictions. Cryptocurrency payments also create publicly visible transaction records on the relevant blockchain network.
+
+We do not use advertising analytics or marketing email services. We do not sell personal information or share it for targeted advertising.
+
+Cross-border transfers can mean that information is protected by the laws of the destination jurisdiction. We use reasonable technical and organizational measures and, where legally required, provide notices, obtain separate consent, or use another lawful transfer mechanism. Do not submit through the API personal data, state secrets, financial-account information, or other highly sensitive information that you are not authorized to disclose.
+
+4. Retention
+
+Account and balance information is generally retained while your account remains active. After deletion, we delete or anonymize it within a reasonably necessary period unless law, a dispute, a refund, fraud prevention, or security requires retention.
+
+Technical, security, usage, and error logs are normally retained for 90 days. Payment wallet addresses, transaction hashes, amounts, timestamps, and refund/anti-fraud records are normally retained for 90 days. We retain information longer only to the extent required by law, a dispute, or a fraud-prevention investigation.
+
+5. Security
+
+We use reasonable access controls, encrypted transmission, key protection, least-privilege practices, and monitoring. No transmission or storage method is completely secure. Protect your account, password, and API keys, and contact us immediately if you suspect compromise.
+
+6. Your rights and requests
+
+To the extent provided by applicable law, you may request access, correction, deletion, restriction or objection to processing, withdrawal of consent, a portable copy, or make a complaint. You may request account or data deletion by emailing chennuo2233@gmail.com.
+
+To protect account security, we may require reasonable identity verification before responding. We respond within the time required by applicable law. Some information cannot be immediately deleted where it must be retained by law or is needed to protect others' rights, resolve disputes, or prevent fraud.
+
+7. Minors
+
+The Service is only for users aged 18 or older. We do not knowingly collect information from persons under 18. If we learn that we have done so, we will delete or restrict it as required by applicable law.
+
+8. Updates and contact
+
+We may update this Policy and publish material changes on the website or in your account. Continued use does not replace any separate consent required by law.
+
+For privacy, deletion, complaint, or data-rights requests, contact chennuo2233@gmail.com.
+
+Important notice: This Policy does not represent that the Service meets every data-localization, cross-border-transfer, consumer-protection, tax, or crypto-asset requirement of Russia or any other jurisdiction. Before publicly registering, charging, or continuously processing personal data of Russian residents, obtain qualified cross-border and Russian legal advice and implement all required consent, notice, and data-handling mechanisms in the product.

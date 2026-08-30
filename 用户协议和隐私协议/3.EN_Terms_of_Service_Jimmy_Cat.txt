@@ -1,0 +1,76 @@
+Jimmy Cat Terms of Service
+
+Version 1.0 (Draft for Legal Review)
+Effective date: 30 August 2026
+
+Please read these Terms before using Jimmy Cat. They govern your use of the website, account, redemption codes, account balance, and API services.
+
+1. Operator and contact details
+
+Jimmy Cat is operated by Nuo Chen (陈诺), an individual located in Linping District, Hangzhou, Zhejiang, China ("we", "us", or "Operator").
+Support and data-rights requests: chennuo2233@gmail.com.
+Service website: https://jmmredeem.online (the "Service").
+
+2. The Service
+
+The Service provides API access and account-management capabilities for development, testing, and product integration. Requests may be routed to third-party AI model service providers. Models, availability, capabilities, latency, prices, and restrictions may change.
+
+Unless expressly agreed in writing, we do not guarantee that a particular model will remain available, that output will be accurate, uninterrupted, or fit for your particular purpose. You must test and assess risks before production use.
+
+3. Age, accounts, and security
+
+1. The Service is for users aged 18 or older. By using it, you confirm that you are at least 18 and able to accept these Terms.
+2. You must provide lawful and accurate account information and protect your account, password, API keys, redemption codes, and devices.
+3. Requests made with your account or API key are treated as made by you. Unless applicable law provides otherwise, you are responsible for those requests and charges.
+4. You may not use an account, key, or redemption code for unlawful activity, fraud, circumvention of restrictions, unauthorized resale of access, or conduct that threatens system security.
+
+4. Acceptable use
+
+You must not use the Service to submit, generate, distribute, assist with, or request content or activity that violates applicable law or the rights of others, including:
+
+1. pornography, sexual exploitation, or other inappropriate explicit content;
+2. violent or graphic harm, threats, intimidation, or operational assistance for self-harm;
+3. fraud, phishing, scams, malware, theft, security-control evasion, or other cybercrime;
+4. unlawful political incitement, hate, harassment, privacy violations, defamation, intellectual-property infringement, or other unlawful requests;
+5. evasion of sanctions, export controls, provider rules, platform safeguards, or applicable law; or
+6. high-risk use in medical, legal, financial, public-safety, or similar contexts without independent human review and appropriate professional validation.
+
+We may use automated or human measures to protect safety and compliance. Where we identify or reasonably suspect a violation, fraud, money laundering, payment-instrument abuse, abnormal arbitrage, or security risk, we may, where permitted by law, restrict requests, suspend or terminate an account, revoke keys, freeze suspected fraudulent balance, and cooperate with lawful requests.
+
+5. Redemption codes, cryptocurrency, and refunds
+
+1. Account balance may currently be obtained through redemption codes or cryptocurrency. Blockchain networks are not operated by us. On-chain transfers are generally irreversible, and you bear network-congestion, mining-fee, exchange-rate, and third-party wallet risks.
+2. An order balance that has not been consumed, deducted, gifted, transferred, or used for any API request ("Fully Unused Balance") may be refunded on request with no fixed time limit, subject to applicable law, anti-fraud review, and this section.
+3. Refunds are normally returned to the same cryptocurrency address and in the same cryptocurrency used for payment. Non-refundable blockchain network fees actually incurred, and any fees that must legally be withheld, may be deducted. If an original-route refund is impossible, we may reasonably request proof of ownership and agree another method with you.
+4. Balance that has been consumed, deducted, gifted, transferred, used for API requests, or lawfully handled because of a breach of these Terms is not Fully Unused Balance and is generally non-refundable, except where a refund is required by law.
+5. To process payments, refunds, disputes, and fraud prevention, we retain necessary wallet addresses, transaction hashes, amounts, timestamps, and handling records for 90 days.
+
+6. Third-party services and content
+
+Your requests may be sent to third-party AI model service providers. Those providers are responsible for their own services, model outputs, and processing activities; you must also comply with their applicable rules. We do not claim rights you legally hold in your inputs or outputs, but you must have the rights needed to submit content and use outputs.
+
+AI output can be inaccurate, incomplete, biased, or unsuitable for a particular purpose. Do not rely on it as the sole basis for medical, legal, financial, employment, insurance, credit, law-enforcement, or other consequential decisions.
+
+7. Changes, suspension, and termination
+
+For operational, security, compliance, upstream-provider, or force-majeure reasons, we may reasonably modify, suspend, or discontinue all or part of the Service. Fully Unused Balance affected by this will be handled under Section 5. Nothing here excludes liability that cannot be excluded by law.
+
+8. Disclaimers and limitation of liability
+
+To the maximum extent permitted by applicable law, the Service is provided "as is" and "as available". We are not liable for indirect loss, lost profit, loss of data, business interruption, or third-party service failure, unless that liability cannot lawfully be excluded.
+
+To the maximum extent permitted by applicable law, our aggregate liability arising out of the Service or these Terms is limited to the amount you actually paid us for the Service in the 12 months before the event giving rise to the claim. This limit does not apply to intentional misconduct, gross negligence, personal injury, or liability that cannot lawfully be limited.
+
+9. Disputes and governing rules
+
+If a dispute arises, the parties should first seek to resolve it in good faith through the support email above, with a suggested discussion period of 30 days. These Terms do not preselect one governing law or exclusive forum. Mandatory consumer-protection, data-protection, jurisdictional, and other rules that apply by law are not excluded.
+
+10. Updates to these Terms
+
+We may update these Terms for service, legal, or security reasons. Material changes will be published through the website, account notices, or another reasonable method. Continued use after the effective date means acceptance to the extent permitted by law.
+
+11. Contact
+
+For service, refunds, complaints, account deletion, or data-rights requests, contact chennuo2233@gmail.com.
+
+Notice: This document is an operational draft for a cross-border service, not legal advice. Before publicly registering, charging, or continuously processing data of Russian residents, obtain qualified legal advice on Russian data localization, cross-border transfers, consumer protection, tax, sanctions, and crypto-asset requirements.
