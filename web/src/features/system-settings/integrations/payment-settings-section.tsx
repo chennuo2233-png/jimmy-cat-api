@@ -195,12 +195,18 @@ type PaymentComplianceDefaults = {
   confirmedBy: number
 }
 
+type USDTBEP20SettingsValues = {
+  rpcURL: string
+  addresses: string
+}
+
 type PaymentSettingsSectionProps = {
   defaultValues: PaymentBaseFormValues
   waffoDefaultValues: WaffoSettingsValues
   waffoPancakeDefaultValues: WaffoPancakeSettingsValues
   waffoPancakeProvisionedStoreID?: string
   waffoPancakeProvisionedProductID?: string
+  usdtDefaultValues: USDTBEP20SettingsValues
   complianceDefaults: PaymentComplianceDefaults
 }
 
@@ -219,15 +225,25 @@ export function PaymentSettingsSection({
   waffoPancakeDefaultValues,
   waffoPancakeProvisionedStoreID,
   waffoPancakeProvisionedProductID,
+  usdtDefaultValues,
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
-  const [usdtRPCURL, setUSDTBEP20RPCURL] = React.useState('')
-  const [usdtAddresses, setUSDTBEP20Addresses] = React.useState('')
+  const [usdtRPCURL, setUSDTBEP20RPCURL] = React.useState(
+    usdtDefaultValues.rpcURL
+  )
+  const [usdtAddresses, setUSDTBEP20Addresses] = React.useState(
+    usdtDefaultValues.addresses
+  )
   const [usdtPassword, setUSDTBEP20Password] = React.useState('')
   const [savingUSDT, setSavingUSDT] = React.useState(false)
   const queryClient = useQueryClient()
   const updateOption = useUpdateOption()
+
+  React.useEffect(() => {
+    setUSDTBEP20RPCURL(usdtDefaultValues.rpcURL)
+    setUSDTBEP20Addresses(usdtDefaultValues.addresses)
+  }, [usdtDefaultValues.addresses, usdtDefaultValues.rpcURL])
   const initialFormValues = React.useMemo<PaymentFormValues>(
     () => ({
       ...defaultValues,
@@ -1633,10 +1649,78 @@ export function PaymentSettingsSection({
             </TabsContent>
             <TabsContent value='usdt-bep20' className={paymentTabContentClassName}>
               <div className='space-y-4'>
-                <FormItem><FormLabel>{t('BSC RPC URL')}</FormLabel><Input type='password' value={usdtRPCURL} onChange={(event) => setUSDTBEP20RPCURL(event.target.value)} placeholder='https://rpc.ankr.com/bsc/...' /></FormItem>
-                <FormItem><FormLabel>{t('Receiving wallet addresses')}</FormLabel><Input value={usdtAddresses} onChange={(event) => setUSDTBEP20Addresses(event.target.value)} placeholder='0x..., 0x...' /></FormItem>
-                <FormItem><FormLabel>{t('Current password')}</FormLabel><Input type='password' value={usdtPassword} onChange={(event) => setUSDTBEP20Password(event.target.value)} /></FormItem>
-                <Button type='button' disabled={savingUSDT} onClick={async () => { setSavingUSDT(true); try { const result = await saveUSDTBEP20Config({ password: usdtPassword, rpc_url: usdtRPCURL, addresses: usdtAddresses.split(',').map((value) => value.trim()).filter(Boolean) }); if (result.success) { toast.success(t('USDT BEP-20 settings saved')); setUSDTBEP20Password('') } else toast.error(result.message || t('Failed to save settings')) } catch (error) { toast.error(error instanceof Error ? error.message : t('Failed to save settings')) } finally { setSavingUSDT(false) } }}>{savingUSDT && <Loader2 className='mr-2 size-4 animate-spin' />}{t('Save')}</Button>
+                <FormItem>
+                  <FormLabel>{t('BSC RPC URL')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtRPCURL}
+                    onChange={(event) => setUSDTBEP20RPCURL(event.target.value)}
+                    placeholder='https://rpc.ankr.com/bsc/...'
+                    autoComplete='off'
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('Receiving wallet addresses')}</FormLabel>
+                  <Input
+                    value={usdtAddresses}
+                    onChange={(event) => setUSDTBEP20Addresses(event.target.value)}
+                    placeholder='0x..., 0x...'
+                    autoComplete='off'
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('Current password')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtPassword}
+                    onChange={(event) => setUSDTBEP20Password(event.target.value)}
+                    autoComplete='current-password'
+                  />
+                </FormItem>
+                <Button
+                  type='button'
+                  disabled={
+                    savingUSDT ||
+                    !usdtPassword ||
+                    !usdtRPCURL ||
+                    !usdtAddresses
+                  }
+                  onClick={async () => {
+                    setSavingUSDT(true)
+                    try {
+                      const result = await saveUSDTBEP20Config({
+                        password: usdtPassword,
+                        rpc_url: usdtRPCURL,
+                        addresses: usdtAddresses
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean),
+                      })
+                      if (result.success) {
+                        toast.success(t('USDT BEP-20 settings saved'))
+                        setUSDTBEP20Password('')
+                        await queryClient.invalidateQueries({
+                          queryKey: ['system-options'],
+                        })
+                      } else {
+                        toast.error(
+                          result.message || t('Failed to save settings')
+                        )
+                      }
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : t('Failed to save settings')
+                      )
+                    } finally {
+                      setSavingUSDT(false)
+                    }
+                  }}
+                >
+                  {savingUSDT && <Loader2 className='mr-2 size-4 animate-spin' />}
+                  {t('Save')}
+                </Button>
               </div>
             </TabsContent>
           </Tabs>

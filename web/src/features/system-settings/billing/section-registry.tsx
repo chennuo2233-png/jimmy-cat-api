@@ -178,6 +178,10 @@ const BILLING_SECTIONS = [
         }}
         waffoPancakeProvisionedStoreID={settings.WaffoPancakeStoreID ?? ''}
         waffoPancakeProvisionedProductID={settings.WaffoPancakeProductID ?? ''}
+        usdtDefaultValues={{
+          rpcURL: settings.USDTBEP20RPCURL ?? '',
+          addresses: settings.USDTBEP20Addresses ?? '',
+        }}
         complianceDefaults={{
           confirmed: settings['payment_setting.compliance_confirmed'] ?? false,
           termsVersion:

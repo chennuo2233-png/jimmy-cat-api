@@ -73,6 +73,8 @@ const defaultBillingSettings: BillingSettings = {
   'payment_setting.compliance_confirmed_at': 0,
   'payment_setting.compliance_confirmed_by': 0,
   'payment_setting.compliance_confirmed_ip': '',
+  USDTBEP20RPCURL: '',
+  USDTBEP20Addresses: '',
   StripeApiSecret: '',
   StripeWebhookSecret: '',
   StripePriceId: '',
