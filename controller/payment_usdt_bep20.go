@@ -23,9 +23,11 @@ func SaveUSDTBEP20Config(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	user, err := model.GetUserById(c.GetInt("id"), false)
+	user, err := model.GetUserById(c.GetInt("id"), true)
 	if err != nil || user.Password == "" || !common.ValidatePasswordAndHash(req.Password, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "message": "invalid password"})
+		// The authenticated administrator supplied an incorrect confirmation
+		// password. This is a validation failure, not an expired login session.
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "invalid password"})
 		return
 	}
 	if !strings.HasPrefix(strings.TrimSpace(req.RPCURL), "https://") || len(req.Addresses) == 0 {
@@ -41,7 +43,13 @@ func SaveUSDTBEP20Config(c *gin.Context) {
 		}
 		clean = append(clean, address)
 	}
-	if err := model.UpdateOption("USDTBEP20RPCURL", strings.TrimSpace(req.RPCURL)); err != nil { common.ApiError(c, err); return }
-	if err := model.UpdateOption("USDTBEP20Addresses", strings.Join(clean, ",")); err != nil { common.ApiError(c, err); return }
+	if err := model.UpdateOption("USDTBEP20RPCURL", strings.TrimSpace(req.RPCURL)); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if err := model.UpdateOption("USDTBEP20Addresses", strings.Join(clean, ",")); err != nil {
+		common.ApiError(c, err)
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": ""})
 }
