@@ -36,6 +36,7 @@ import {
   isWaffoPancakePayment,
   isUSDTBEP20Payment,
   submitPaymentForm,
+  USDT_BEP20_ORDER_CREATED_EVENT,
 } from '../lib'
 import type { AmountRequest, AmountResponse } from '../types'
 
@@ -123,6 +124,7 @@ export function usePayment() {
             const data = response.data as { address: string; amount: string; order_id: string }
             window.sessionStorage.setItem('usdt-bep20-order', JSON.stringify(data))
             window.location.hash = 'usdt-bep20-payment'
+            window.dispatchEvent(new Event(USDT_BEP20_ORDER_CREATED_EVENT))
             return true
           }
           toast.error(response.message || i18next.t('Payment request failed'))

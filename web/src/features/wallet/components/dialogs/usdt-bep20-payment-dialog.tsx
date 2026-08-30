@@ -1,6 +1,6 @@
 import { CheckCircle2, Copy, Loader2 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { getUSDTBEP20PaymentOrder } from '../../api'
+import { USDT_BEP20_ORDER_CREATED_EVENT } from '../../lib'
 
 type Order = {
   address: string
@@ -28,11 +29,30 @@ export function USDTBEP20PaymentDialog() {
   const [order, setOrder] = useState<Order | null>(null)
   const [checking, setChecking] = useState(false)
 
-  useEffect(() => {
+  const loadPaymentOrder = useCallback(() => {
     if (window.location.hash !== '#usdt-bep20-payment') return
     const raw = window.sessionStorage.getItem('usdt-bep20-order')
-    if (raw) setOrder(JSON.parse(raw) as Order)
+    if (!raw) return
+
+    try {
+      setOrder(JSON.parse(raw) as Order)
+    } catch {
+      window.sessionStorage.removeItem('usdt-bep20-order')
+    }
   }, [])
+
+  useEffect(() => {
+    loadPaymentOrder()
+    window.addEventListener('hashchange', loadPaymentOrder)
+    window.addEventListener(USDT_BEP20_ORDER_CREATED_EVENT, loadPaymentOrder)
+    return () => {
+      window.removeEventListener('hashchange', loadPaymentOrder)
+      window.removeEventListener(
+        USDT_BEP20_ORDER_CREATED_EVENT,
+        loadPaymentOrder
+      )
+    }
+  }, [loadPaymentOrder])
 
   useEffect(() => {
     if (!order || order.cdk || order.expires_at * 1000 <= Date.now()) return

@@ -24,6 +24,8 @@ import {
 } from '../constants'
 import type { PaymentMethod, PresetAmount, TopupInfo } from '../types'
 
+export const USDT_BEP20_ORDER_CREATED_EVENT = 'usdt-bep20-order-created'
+
 // ============================================================================
 // Payment Processing Functions
 // ============================================================================
@@ -93,7 +95,9 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.WAFFO_PANCAKE
 }
 
-export function isUSDTBEP20Payment(paymentType: string): boolean { return paymentType === PAYMENT_TYPES.USDT_BEP20 }
+export function isUSDTBEP20Payment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.USDT_BEP20
+}
 
 export interface PaymentProcessors {
   regular: (topupAmount: number, paymentType: string) => Promise<boolean>
