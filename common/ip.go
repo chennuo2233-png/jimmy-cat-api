@@ -49,3 +49,8 @@ func IsIpInCIDRList(ip net.IP, cidrList []string) bool {
 	}
 	return false
 }
+
+func IsRateLimitBypassIP(clientIP string) bool {
+	ip := net.ParseIP(clientIP)
+	return ip != nil && IsIpInCIDRList(ip, RateLimitBypassIPs)
+}

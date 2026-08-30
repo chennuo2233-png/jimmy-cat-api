@@ -73,6 +73,32 @@ func TestRedisIPRateLimiterThresholdTTLAndNamespace(t *testing.T) {
 	assert.True(t, redisServer.Exists(legacyKey), "the v2 counter must not touch an old list key")
 }
 
+func TestRateLimitBypassIPSkipsIPAndUserLimits(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	_, _ = useRateLimitMiniRedis(t)
+	previousBypassIPs := common.RateLimitBypassIPs
+	common.RateLimitBypassIPs = []string{"192.0.2.90"}
+	t.Cleanup(func() {
+		common.RateLimitBypassIPs = previousBypassIPs
+	})
+
+	router := gin.New()
+	require.NoError(t, router.SetTrustedProxies(nil))
+	router.GET(
+		"/limited",
+		rateLimitFactory(1, 30, "BYPASS"),
+		func(c *gin.Context) { c.Set("id", 42) },
+		userRateLimitFactory(1, 30, "BYPASS-USER"),
+		func(c *gin.Context) { c.Status(http.StatusNoContent) },
+	)
+
+	for range 3 {
+		assert.Equal(t, http.StatusNoContent, performRateLimitRequest(router, "/limited", "192.0.2.90:12345").Code)
+	}
+	assert.Equal(t, http.StatusNoContent, performRateLimitRequest(router, "/limited", "198.51.100.90:12345").Code)
+	assert.Equal(t, http.StatusTooManyRequests, performRateLimitRequest(router, "/limited", "198.51.100.90:12345").Code)
+}
+
 func TestRedisUserRateLimiterUsesSharedFixedWindow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	redisServer, _ := useRateLimitMiniRedis(t)

@@ -133,7 +133,24 @@ func InitEnv() {
 	SearchRateLimitEnable = GetEnvOrDefaultBool("SEARCH_RATE_LIMIT_ENABLE", true)
 	SearchRateLimitNum = GetEnvOrDefault("SEARCH_RATE_LIMIT", 10)
 	SearchRateLimitDuration = int64(GetEnvOrDefault("SEARCH_RATE_LIMIT_DURATION", 60))
+	RateLimitBypassIPs = splitCommaSeparatedEnv("RATE_LIMIT_BYPASS_IPS")
 	initConstantEnv()
+}
+
+func splitCommaSeparatedEnv(name string) []string {
+	raw := GetEnvOrDefaultString(name, "")
+	if raw == "" {
+		return nil
+	}
+
+	values := strings.Split(raw, ",")
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if value = strings.TrimSpace(value); value != "" {
+			result = append(result, value)
+		}
+	}
+	return result
 }
 
 func initUserSessionSettings() {

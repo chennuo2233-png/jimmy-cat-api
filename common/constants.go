@@ -218,6 +218,11 @@ var (
 	SearchRateLimitEnable         = true
 	SearchRateLimitNum            = 10
 	SearchRateLimitDuration int64 = 60
+
+	// RateLimitBypassIPs contains exact IP addresses or CIDR blocks that bypass
+	// application rate limits. It is intended for tightly controlled operations
+	// addresses, not general customer access.
+	RateLimitBypassIPs []string
 )
 
 var RateLimitKeyExpirationDuration = 20 * time.Minute

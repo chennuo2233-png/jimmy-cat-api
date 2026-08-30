@@ -24,6 +24,7 @@ services:
       SESSION_COOKIE_SECURE: "true"
       SESSION_COOKIE_TRUSTED_URL: ${PUBLIC_URL}
       TRUSTED_PROXIES: 172.16.0.0/12
+      RATE_LIMIT_BYPASS_IPS: ${RATE_LIMIT_BYPASS_IPS:-}
     depends_on:
       postgres:
         condition: service_healthy
