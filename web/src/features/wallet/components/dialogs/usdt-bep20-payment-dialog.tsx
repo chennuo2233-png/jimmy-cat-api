@@ -28,6 +28,14 @@ export function USDTBEP20PaymentDialog() {
   const { t } = useTranslation()
   const [order, setOrder] = useState<Order | null>(null)
   const [checking, setChecking] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
+  const paymentReceived = order?.status === 'success'
+
+  const close = useCallback(() => {
+    setOrder(null)
+    window.location.hash = ''
+    window.sessionStorage.removeItem('usdt-bep20-order')
+  }, [])
 
   const loadPaymentOrder = useCallback(() => {
     if (window.location.hash !== '#usdt-bep20-payment') return
@@ -55,9 +63,22 @@ export function USDTBEP20PaymentDialog() {
   }, [loadPaymentOrder])
 
   useEffect(() => {
+    if (!order || paymentReceived) return
+    setNow(Date.now())
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000)
+    return () => window.clearInterval(timer)
+  }, [order, paymentReceived])
+
+  useEffect(() => {
+    if (!order || paymentReceived || now < order.expires_at * 1000) return
+    toast.error(t('This payment order has expired.'))
+    close()
+  }, [close, now, order, paymentReceived, t])
+
+  useEffect(() => {
     if (
       !order ||
-      order.status === 'success' ||
+      order.status !== 'pending' ||
       order.expires_at * 1000 <= Date.now()
     ) {
       return
@@ -96,18 +117,16 @@ export function USDTBEP20PaymentDialog() {
     }
   }, [order, t])
 
-  const close = () => {
-    setOrder(null)
-    window.location.hash = ''
-    window.sessionStorage.removeItem('usdt-bep20-order')
-  }
   const copy = async (value: string) => {
     await navigator.clipboard.writeText(value)
     toast.success(t('Copied'))
   }
-  const paymentReceived = order?.status === 'success'
-  const expired =
-    !!order && order.expires_at * 1000 <= Date.now() && !paymentReceived
+  const remainingSeconds = order
+    ? Math.max(0, Math.ceil((order.expires_at * 1000 - now) / 1_000))
+    : 0
+  const countdown = `${Math.floor(remainingSeconds / 60)
+    .toString()
+    .padStart(2, '0')}:${(remainingSeconds % 60).toString().padStart(2, '0')}`
 
   return (
     <Dialog open={!!order} onOpenChange={(open) => !open && close()}>
@@ -191,13 +210,14 @@ export function USDTBEP20PaymentDialog() {
                   <Copy className='size-4 shrink-0' />
                 </Button>
                 <p className='text-muted-foreground text-center text-sm'>
-                  {expired
-                    ? t('This payment order has expired.')
-                    : t(
-                        'Payment is checked automatically after 12 BSC confirmations.'
-                      )}
+                  {t('Order expires in {{time}}', { time: countdown })}
                 </p>
-                {!expired && checking && (
+                <p className='text-muted-foreground text-center text-sm'>
+                  {t(
+                    'Payment is checked automatically after 12 BSC confirmations.'
+                  )}
+                </p>
+                {checking && (
                   <Loader2 className='text-muted-foreground mx-auto size-4 animate-spin' />
                 )}
               </>

@@ -50,6 +50,8 @@ const (
 	PaymentMethodBalance      = "balance"
 )
 
+const maxPendingUSDTBEP20TopUpsPerUser = 2
+
 const (
 	PaymentProviderEpay         = "epay"
 	PaymentProviderStripe       = "stripe"
@@ -86,8 +88,39 @@ func CreateUSDTBEP20TopUp(topUp *TopUp) error {
 
 	return DB.Transaction(func(tx *gorm.DB) error {
 		now := common.GetTimestamp()
+		// Lock the user row so concurrent checkout requests from the same user
+		// cannot each observe fewer than two active orders.
+		if err := lockForUpdate(tx).Where("id = ?", topUp.UserId).First(&User{}).Error; err != nil {
+			return err
+		}
 		if err := tx.Where("reserved_until <= ?", now).Delete(&USDTBEP20PaymentReference{}).Error; err != nil {
 			return err
+		}
+		if err := tx.Model(&TopUp{}).Where(
+			"user_id = ? AND payment_provider = ? AND status = ? AND payment_expire_at <= ?",
+			topUp.UserId,
+			PaymentProviderUSDTBEP20,
+			common.TopUpStatusPending,
+			now,
+		).Update("status", common.TopUpStatusExpired).Error; err != nil {
+			return err
+		}
+		var pendingOrders []TopUp
+		if err := lockForUpdate(tx).Where(
+			"user_id = ? AND payment_provider = ? AND status = ? AND payment_expire_at > ?",
+			topUp.UserId,
+			PaymentProviderUSDTBEP20,
+			common.TopUpStatusPending,
+			now,
+		).Order("create_time ASC, id ASC").Find(&pendingOrders).Error; err != nil {
+			return err
+		}
+		for len(pendingOrders) >= maxPendingUSDTBEP20TopUpsPerUser {
+			oldest := pendingOrders[0]
+			if err := tx.Model(&TopUp{}).Where("id = ? AND status = ?", oldest.Id, common.TopUpStatusPending).Update("status", common.TopUpStatusExpired).Error; err != nil {
+				return err
+			}
+			pendingOrders = pendingOrders[1:]
 		}
 		if err := tx.Create(topUp).Error; err != nil {
 			return err
@@ -208,6 +241,17 @@ func GetPendingUSDTBEP20TopUps() ([]TopUp, error) {
 		common.GetTimestamp(),
 	).Find(&orders).Error
 	return orders, err
+}
+
+// ExpireUSDTBEP20PendingTopUps closes orders that have reached their payment
+// deadline so they are never considered by the chain scanner again.
+func ExpireUSDTBEP20PendingTopUps() error {
+	return DB.Model(&TopUp{}).Where(
+		"payment_provider = ? AND status = ? AND payment_expire_at <= ?",
+		PaymentProviderUSDTBEP20,
+		common.TopUpStatusPending,
+		common.GetTimestamp(),
+	).Update("status", common.TopUpStatusExpired).Error
 }
 
 func GetUSDTBEP20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {

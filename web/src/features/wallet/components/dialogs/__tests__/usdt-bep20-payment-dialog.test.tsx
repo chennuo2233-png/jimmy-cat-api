@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createInstance } from 'i18next'
 import { initReactI18next, I18nextProvider } from 'react-i18next'
@@ -40,6 +40,7 @@ await i18n.use(initReactI18next).init({
         'Contact us on Telegram:': 'Свяжитесь с нами в Telegram:',
         Copied: 'Скопировано',
         'Important payment information': 'Важная информация об оплате',
+        'Order expires in {{time}}': 'Заказ истечёт через {{time}}',
         'Payment is checked automatically after 12 BSC confirmations.':
           'Платёж будет проверен автоматически после 12 подтверждений в сети BSC.',
         'Payment received. Your balance has been credited automatically.':
@@ -107,6 +108,9 @@ describe('USDT BEP-20 payment dialog', () => {
     expect(
       screen.getByText(/Кошелёк или платёжный сервис может удержать комиссию/)
     ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Заказ истечёт через \d{2}:\d{2}/)
+    ).toBeInTheDocument()
     const user = userEvent.setup()
     const supportSummary = screen.getByText(
       'Ошибка при переводе или нужен возврат?'
@@ -159,5 +163,30 @@ describe('USDT BEP-20 payment dialog', () => {
       )
     ).toHaveLength(2)
     expect(screen.queryByText('Код пополнения')).not.toBeInTheDocument()
+  })
+
+  test('closes the dialog when a pending payment order reaches its deadline', async () => {
+    window.location.hash = '#usdt-bep20-payment'
+    window.sessionStorage.setItem(
+      'usdt-bep20-order',
+      JSON.stringify({
+        address: '0x1234567890123456789012345678901234567890',
+        amount: '10.001000',
+        expires_at: Date.now() / 1000 - 1,
+        order_id: 'USDT_BEP20-expired',
+        status: 'pending',
+      })
+    )
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <USDTBEP20PaymentDialog />
+      </I18nextProvider>
+    )
+
+    await waitFor(() => {
+      expect(window.location.hash).toBe('')
+    })
+    expect(window.sessionStorage.getItem('usdt-bep20-order')).toBeNull()
   })
 })

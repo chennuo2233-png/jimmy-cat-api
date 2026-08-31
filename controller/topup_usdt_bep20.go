@@ -129,7 +129,12 @@ func GetUSDTBEP20PayStatus(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "error", "data": "order not found"})
 		return
 	}
-	if order.Status == common.TopUpStatusPending && order.PaymentExpireAt > common.GetTimestamp() {
+	if order.Status == common.TopUpStatusPending && order.PaymentExpireAt <= common.GetTimestamp() {
+		if err := model.UpdatePendingTopUpStatus(order.TradeNo, model.PaymentProviderUSDTBEP20, common.TopUpStatusExpired); err != nil && !errors.Is(err, model.ErrTopUpStatusInvalid) {
+			common.SysError(fmt.Sprintf("usdt bep20 expire trade_no=%s: %v", order.TradeNo, err))
+		}
+		order, _ = model.GetUSDTBEP20TopUpForUser(c.Param("order_id"), c.GetInt("id"))
+	} else if order.Status == common.TopUpStatusPending {
 		if _, err := scanUSDTBEP20Order(c.Request.Context(), *order); err != nil {
 			common.SysError(fmt.Sprintf("usdt bep20 status scan trade_no=%s: %v", order.TradeNo, err))
 		}
@@ -164,6 +169,9 @@ func ConfirmUSDTBEP20Pay(c *gin.Context) {
 }
 
 func ScanUSDTBEP20PendingOrders(ctx context.Context) (int, error) {
+	if err := model.ExpireUSDTBEP20PendingTopUps(); err != nil {
+		return 0, err
+	}
 	orders, err := model.GetPendingUSDTBEP20TopUps()
 	if err != nil {
 		return 0, err

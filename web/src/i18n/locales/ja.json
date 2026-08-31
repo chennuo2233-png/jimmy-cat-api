@@ -3244,6 +3244,7 @@
     "Or enter this key manually:": "または、このキーを手動で入力してください:",
     "or pick existing": "または既存のものを選択",
     "Order completed successfully": "注文が正常に完了しました",
+    "Order expires in {{time}}": "注文の有効期限：残り {{time}}",
     "Order History": "注文履歴",
     "Order Payment Method": "注文の支払い方法",
     "org-...": "org-...",

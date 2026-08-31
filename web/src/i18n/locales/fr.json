@@ -3244,6 +3244,7 @@
     "Or enter this key manually:": "Ou entrez cette clé manuellement :",
     "or pick existing": "ou choisir une existante",
     "Order completed successfully": "Commande terminée avec succès",
+    "Order expires in {{time}}": "La commande expire dans {{time}}",
     "Order History": "Historique des commandes",
     "Order Payment Method": "Moyen de paiement (commande)",
     "org-...": "org-...",

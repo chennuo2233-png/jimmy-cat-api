@@ -3244,6 +3244,7 @@
     "Or enter this key manually:": "或手動輸入此金鑰：",
     "or pick existing": "或選擇已有項",
     "Order completed successfully": "訂單已成功完成",
+    "Order expires in {{time}}": "訂單將在 {{time}} 後到期",
     "Order History": "訂單歷史",
     "Order Payment Method": "訂單支付方式",
     "org-...": "org-...",

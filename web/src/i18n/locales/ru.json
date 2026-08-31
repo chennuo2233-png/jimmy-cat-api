@@ -3244,6 +3244,7 @@
     "Or enter this key manually:": "Или введите этот ключ вручную:",
     "or pick existing": "или выбрать существующую",
     "Order completed successfully": "Заказ успешно завершен",
+    "Order expires in {{time}}": "Заказ истечёт через {{time}}",
     "Order History": "История заказов",
     "Order Payment Method": "Способ оплаты (заказа)",
     "org-...": "орг-...",
