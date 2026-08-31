@@ -1,4 +1,4 @@
-import { CheckCircle2, Copy, Loader2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Copy, Loader2 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+
 import { getUSDTBEP20PaymentOrder } from '../../api'
 import { USDT_BEP20_ORDER_CREATED_EVENT } from '../../lib'
 
@@ -64,10 +65,17 @@ export function USDTBEP20PaymentDialog() {
         const next = result.data as Order | undefined
         if (!cancelled && next) {
           setOrder((current) =>
-            current?.status === next.status && current?.cdk === next.cdk ? current : next
+            current?.status === next.status && current?.cdk === next.cdk
+              ? current
+              : next
           )
-          window.sessionStorage.setItem('usdt-bep20-order', JSON.stringify(next))
-          if (next.cdk) toast.success(t('Payment received. Your redemption code is ready.'))
+          window.sessionStorage.setItem(
+            'usdt-bep20-order',
+            JSON.stringify(next)
+          )
+          if (next.cdk) {
+            toast.success(t('Payment received. Your redemption code is ready.'))
+          }
         }
       } finally {
         if (!cancelled) setChecking(false)
@@ -79,7 +87,7 @@ export function USDTBEP20PaymentDialog() {
       cancelled = true
       window.clearInterval(timer)
     }
-  }, [order?.cdk, order?.expires_at, order?.order_id, order?.status, t])
+  }, [order, t])
 
   const close = () => {
     setOrder(null)
@@ -91,6 +99,7 @@ export function USDTBEP20PaymentDialog() {
     toast.success(t('Copied'))
   }
   const expired = !!order && order.expires_at * 1000 <= Date.now() && !order.cdk
+  const redemptionCode = order?.cdk
 
   return (
     <Dialog open={!!order} onOpenChange={(open) => !open && close()}>
@@ -105,19 +114,42 @@ export function USDTBEP20PaymentDialog() {
         </DialogHeader>
         {order && (
           <div className='space-y-4'>
-            {order.cdk ? (
+            {redemptionCode ? (
               <div className='rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4'>
                 <div className='mb-2 flex items-center gap-2 font-medium text-emerald-600 dark:text-emerald-400'>
                   <CheckCircle2 className='size-4' />
                   {t('Redemption Code')}
                 </div>
-                <Button variant='outline' className='w-full break-all font-mono' onClick={() => copy(order.cdk!)}>
-                  {order.cdk}
+                <Button
+                  variant='outline'
+                  className='w-full font-mono break-all'
+                  onClick={() => copy(redemptionCode)}
+                >
+                  {redemptionCode}
                   <Copy className='ml-2 size-4 shrink-0' />
                 </Button>
               </div>
             ) : (
               <>
+                <div className='rounded-lg border border-amber-400/40 bg-amber-500/10 p-3 text-amber-950 dark:text-amber-100'>
+                  <div className='flex items-center gap-2 text-sm font-semibold'>
+                    <AlertTriangle className='size-4 shrink-0' />
+                    {t('Important payment information')}
+                  </div>
+                  <p className='mt-2 text-sm leading-5'>
+                    {t(
+                      'Wallet or payment service fees may apply. Make sure the exact USDT amount shown below reaches our address. If you make a transfer error, keep your payment proof and contact us—we will help resolve it. Unused balance does not expire and may be refunded.'
+                    )}
+                  </p>
+                  <a
+                    className='mt-2 inline-block text-sm font-semibold underline underline-offset-2'
+                    href='https://t.me/Jmm_JimmyCat'
+                    rel='noreferrer'
+                    target='_blank'
+                  >
+                    {t('Contact us on Telegram:')} @Jmm_JimmyCat
+                  </a>
+                </div>
                 <div className='flex justify-center'>
                   <QRCodeSVG
                     value={order.address}
@@ -131,7 +163,7 @@ export function USDTBEP20PaymentDialog() {
                   className='h-auto w-full items-start justify-between gap-3 px-3 py-2.5 text-left'
                   onClick={() => copy(order.address)}
                 >
-                  <span className='min-w-0 flex-1 break-all font-mono text-xs leading-5 sm:text-sm'>
+                  <span className='min-w-0 flex-1 font-mono text-xs leading-5 break-all sm:text-sm'>
                     {order.address}
                   </span>
                   <Copy className='mt-0.5 size-4 shrink-0' />
@@ -145,9 +177,15 @@ export function USDTBEP20PaymentDialog() {
                   <Copy className='size-4 shrink-0' />
                 </Button>
                 <p className='text-muted-foreground text-center text-sm'>
-                  {expired ? t('This payment order has expired.') : t('Payment is checked automatically after 12 BSC confirmations.')}
+                  {expired
+                    ? t('This payment order has expired.')
+                    : t(
+                        'Payment is checked automatically after 12 BSC confirmations.'
+                      )}
                 </p>
-                {!expired && checking && <Loader2 className='text-muted-foreground mx-auto size-4 animate-spin' />}
+                {!expired && checking && (
+                  <Loader2 className='text-muted-foreground mx-auto size-4 animate-spin' />
+                )}
               </>
             )}
           </div>
