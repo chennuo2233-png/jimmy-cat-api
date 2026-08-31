@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createInstance } from 'i18next'
 import { initReactI18next, I18nextProvider } from 'react-i18next'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
@@ -46,8 +47,11 @@ await i18n.use(initReactI18next).init({
         'Redemption Code': 'Код пополнения',
         'This payment order has expired.':
           'Срок действия этого платёжного заказа истёк.',
-        'Wallet or payment service fees may apply. Make sure the exact USDT amount shown below reaches our address. If you make a transfer error, keep your payment proof and contact us—we will help resolve it. Unused balance does not expire and may be refunded.':
-          'Кошелёк или платёжный сервис может удержать комиссию. Убедитесь, что на наш адрес поступит ровно указанная ниже сумма USDT. Если вы ошиблись при переводе, сохраните подтверждение оплаты и свяжитесь с нами — мы поможем разобраться. Неиспользованный баланс не имеет срока действия; для возврата также свяжитесь с нами.',
+        'Transfer issue or refund?': 'Ошибка при переводе или нужен возврат?',
+        'Wallet or payment service fees may apply. Send enough USDT so our address receives the exact amount shown below.':
+          'Кошелёк или платёжный сервис может удержать комиссию. Отправьте сумму с учётом комиссии, чтобы на наш адрес поступила ровно указанная ниже сумма USDT.',
+        'If you make a transfer error, keep your payment proof and contact us—we will help resolve it. Unused balance does not expire and may be refunded.':
+          'Если вы ошиблись при переводе, сохраните подтверждение оплаты и свяжитесь с нами — мы поможем разобраться. Неиспользованный баланс не имеет срока действия; для возврата также свяжитесь с нами.',
       },
     },
   },
@@ -67,7 +71,7 @@ beforeEach(() => {
 })
 
 describe('USDT BEP-20 payment dialog', () => {
-  test('shows the localized fee, support, and refund notice for a pending payment', async () => {
+  test('keeps the localized fee warning visible and expands support details on demand', async () => {
     vi.mocked(getUSDTBEP20PaymentOrder).mockResolvedValue({
       data: {
         address: '0x1234567890123456789012345678901234567890',
@@ -101,6 +105,17 @@ describe('USDT BEP-20 payment dialog', () => {
     expect(
       screen.getByText(/Кошелёк или платёжный сервис может удержать комиссию/)
     ).toBeInTheDocument()
+    const user = userEvent.setup()
+    const supportSummary = screen.getByText(
+      'Ошибка при переводе или нужен возврат?'
+    )
+    const supportDetails = supportSummary.closest('details')
+    expect(supportDetails).not.toBeNull()
+    expect(supportDetails).not.toHaveProperty('open', true)
+
+    await user.click(supportSummary)
+
+    expect(supportDetails).toHaveProperty('open', true)
     expect(
       screen.getByRole('link', {
         name: 'Свяжитесь с нами в Telegram: @Jmm_JimmyCat',

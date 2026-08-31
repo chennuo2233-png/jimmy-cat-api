@@ -138,17 +138,27 @@ export function USDTBEP20PaymentDialog() {
                   </div>
                   <p className='mt-2 text-sm leading-5'>
                     {t(
-                      'Wallet or payment service fees may apply. Make sure the exact USDT amount shown below reaches our address. If you make a transfer error, keep your payment proof and contact us—we will help resolve it. Unused balance does not expire and may be refunded.'
+                      'Wallet or payment service fees may apply. Send enough USDT so our address receives the exact amount shown below.'
                     )}
                   </p>
-                  <a
-                    className='mt-2 inline-block text-sm font-semibold underline underline-offset-2'
-                    href='https://t.me/Jmm_JimmyCat'
-                    rel='noreferrer'
-                    target='_blank'
-                  >
-                    {t('Contact us on Telegram:')} @Jmm_JimmyCat
-                  </a>
+                  <details className='mt-2 text-sm'>
+                    <summary className='cursor-pointer font-semibold underline underline-offset-2'>
+                      {t('Transfer issue or refund?')}
+                    </summary>
+                    <p className='mt-2 leading-5'>
+                      {t(
+                        'If you make a transfer error, keep your payment proof and contact us—we will help resolve it. Unused balance does not expire and may be refunded.'
+                      )}
+                    </p>
+                    <a
+                      className='mt-2 inline-block font-semibold underline underline-offset-2'
+                      href='https://t.me/Jmm_JimmyCat'
+                      rel='noreferrer'
+                      target='_blank'
+                    >
+                      {t('Contact us on Telegram:')} @Jmm_JimmyCat
+                    </a>
+                  </details>
                 </div>
                 <div className='flex justify-center'>
                   <QRCodeSVG
