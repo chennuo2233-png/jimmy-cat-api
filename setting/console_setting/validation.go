@@ -230,10 +230,18 @@ func getPublishTime(item map[string]interface{}) time.Time {
 
 func GetAnnouncements() []map[string]interface{} {
 	list := getJSONList(GetConsoleSetting().Announcements)
-	sort.SliceStable(list, func(i, j int) bool {
-		return getPublishTime(list[i]).After(getPublishTime(list[j]))
+	now := time.Now()
+	active := make([]map[string]interface{}, 0, len(list))
+	for _, announcement := range list {
+		publishTime := getPublishTime(announcement)
+		if !publishTime.After(now) {
+			active = append(active, announcement)
+		}
+	}
+	sort.SliceStable(active, func(i, j int) bool {
+		return getPublishTime(active[i]).After(getPublishTime(active[j]))
 	})
-	return list
+	return active
 }
 
 func GetFAQ() []map[string]interface{} {
