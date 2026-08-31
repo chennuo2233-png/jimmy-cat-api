@@ -103,7 +103,7 @@ export function USDTBEP20PaymentDialog() {
 
   return (
     <Dialog open={!!order} onOpenChange={(open) => !open && close()}>
-      <DialogContent>
+      <DialogContent className='box-border'>
         <DialogHeader>
           <DialogTitle>USDT (BEP-20)</DialogTitle>
           <DialogDescription>
@@ -113,7 +113,7 @@ export function USDTBEP20PaymentDialog() {
           </DialogDescription>
         </DialogHeader>
         {order && (
-          <div className='space-y-4'>
+          <div className='flex min-w-0 flex-col gap-4'>
             {redemptionCode ? (
               <div className='rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4'>
                 <div className='mb-2 flex items-center gap-2 font-medium text-emerald-600 dark:text-emerald-400'>

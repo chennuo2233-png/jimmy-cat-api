@@ -99,6 +99,9 @@ describe('USDT BEP-20 payment dialog', () => {
       </I18nextProvider>
     )
 
+    expect(document.querySelector('[data-slot="dialog-content"]')).toHaveClass(
+      'box-border'
+    )
     expect(
       await screen.findByText('Важная информация об оплате')
     ).toBeInTheDocument()
