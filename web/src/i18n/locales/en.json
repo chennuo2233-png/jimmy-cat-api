@@ -5354,5 +5354,10 @@
   "BSC RPC URL": "BSC RPC URL",
   "Receiving wallet addresses": "Receiving wallet addresses",
   "Current password": "Current password",
-  "USDT BEP-20 settings saved": "USDT BEP-20 settings saved"
+  "USDT BEP-20 settings saved": "USDT BEP-20 settings saved",
+  "System Announcements": "System Announcements",
+  "Announcement title": "Announcement title",
+  "A short summary shown in the announcement list": "A short summary shown in the announcement list",
+  "Optional. Maximum 100 characters.": "Optional. Maximum 100 characters.",
+  "Latest system update": "Latest system update"
 }

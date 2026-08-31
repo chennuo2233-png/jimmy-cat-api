@@ -156,6 +156,15 @@ func validateAnnouncements(announcementsStr string) error {
 		"default": true, "ongoing": true, "success": true, "warning": true, "error": true,
 	}
 	for i, ann := range list {
+		if title, exists := ann["title"]; exists {
+			titleStr, ok := title.(string)
+			if !ok {
+				return fmt.Errorf("第%d个公告的标题格式错误", i+1)
+			}
+			if exceedsMaxCharacters(titleStr, 100) {
+				return fmt.Errorf("第%d个公告的标题长度不能超过100字符", i+1)
+			}
+		}
 		content, ok := ann["content"].(string)
 		if !ok || content == "" {
 			return fmt.Errorf("第%d个公告缺少内容字段", i+1)
@@ -172,17 +181,20 @@ func validateAnnouncements(announcementsStr string) error {
 			return fmt.Errorf("第%d个公告的发布日期格式错误", i+1)
 		}
 		if t, exists := ann["type"]; exists {
-			if typeStr, ok := t.(string); ok {
-				if !validTypes[typeStr] {
-					return fmt.Errorf("第%d个公告的类型值不合法", i+1)
-				}
+			typeStr, ok := t.(string)
+			if !ok || !validTypes[typeStr] {
+				return fmt.Errorf("第%d个公告的类型值不合法", i+1)
 			}
 		}
 		if exceedsMaxCharacters(content, 500) {
 			return fmt.Errorf("第%d个公告的内容长度不能超过500字符", i+1)
 		}
 		if extra, exists := ann["extra"]; exists {
-			if extraStr, ok := extra.(string); ok && exceedsMaxCharacters(extraStr, 100) {
+			extraStr, ok := extra.(string)
+			if !ok {
+				return fmt.Errorf("第%d个公告的说明格式错误", i+1)
+			}
+			if exceedsMaxCharacters(extraStr, 100) {
 				return fmt.Errorf("第%d个公告的说明长度不能超过100字符", i+1)
 			}
 		}

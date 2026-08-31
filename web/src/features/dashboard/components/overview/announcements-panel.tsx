@@ -92,8 +92,13 @@ export function AnnouncementsPanel() {
                   <AnnouncementStatusDot type={item.type} />
                   <div className='flex min-w-0 flex-1 flex-col gap-1'>
                     <p className='line-clamp-1 text-sm font-medium'>
-                      {getPreviewText(item.content)}
+                      {item.title || getPreviewText(item.content)}
                     </p>
+                    {item.title ? (
+                      <p className='text-muted-foreground line-clamp-1 text-xs'>
+                        {getPreviewText(item.content)}
+                      </p>
+                    ) : null}
                     <div className='flex items-center justify-between'>
                       {item.publishDate && (
                         <time className='text-muted-foreground/60 text-xs'>

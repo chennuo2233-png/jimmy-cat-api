@@ -5354,5 +5354,10 @@
   "BSC RPC URL": "BSC RPC 位址",
   "Receiving wallet addresses": "收款錢包地址",
   "Current password": "目前密碼",
-  "USDT BEP-20 settings saved": "USDT BEP-20 設定已儲存"
+  "USDT BEP-20 settings saved": "USDT BEP-20 設定已儲存",
+  "System Announcements": "系統公告",
+  "Announcement title": "公告標題",
+  "A short summary shown in the announcement list": "顯示在公告清單中的簡短摘要",
+  "Optional. Maximum 100 characters.": "選填，最多 100 個字元。",
+  "Latest system update": "最新系統更新"
 }

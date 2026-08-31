@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { AnnouncementsSection } from '../content/announcements-section'
 import { SystemInfoSection } from '../general/system-info-section'
 import {
   parseHeaderNavModules,
@@ -55,6 +56,16 @@ const SITE_SECTIONS = [
     titleKey: 'System Notice',
     build: (settings: SiteSettings) => (
       <NoticeSection defaultValue={settings.Notice ?? ''} />
+    ),
+  },
+  {
+    id: 'announcements',
+    titleKey: 'System Announcements',
+    build: (settings: SiteSettings) => (
+      <AnnouncementsSection
+        enabled={settings['console_setting.announcements_enabled']}
+        data={settings['console_setting.announcements']}
+      />
     ),
   },
   {

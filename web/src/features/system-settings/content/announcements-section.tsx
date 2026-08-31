@@ -68,6 +68,7 @@ import { useUpdateOption } from '../hooks/use-update-option'
 
 type Announcement = {
   id: number
+  title?: string
   content: string
   publishDate: string
   type: 'default' | 'ongoing' | 'success' | 'warning' | 'error'
@@ -80,6 +81,10 @@ type AnnouncementsSectionProps = {
 }
 
 const announcementSchema = z.object({
+  title: z
+    .string()
+    .max(100, 'Title must be less than 100 characters')
+    .optional(),
   content: z
     .string()
     .min(1, 'Content is required')
@@ -148,6 +153,7 @@ export function AnnouncementsSection({
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementSchema),
     defaultValues: {
+      title: '',
       content: '',
       publishDate: new Date().toISOString(),
       type: 'default',
@@ -191,6 +197,7 @@ export function AnnouncementsSection({
   const handleAdd = () => {
     setEditingAnnouncement(null)
     form.reset({
+      title: '',
       content: '',
       publishDate: new Date().toISOString(),
       type: 'default',
@@ -202,6 +209,7 @@ export function AnnouncementsSection({
   const handleEdit = (announcement: Announcement) => {
     setEditingAnnouncement(announcement)
     form.reset({
+      title: announcement.title || '',
       content: announcement.content,
       publishDate: announcement.publishDate,
       type: announcement.type,
@@ -375,10 +383,11 @@ export function AnnouncementsSection({
               ),
             },
             {
-              id: 'content',
-              header: t('Content'),
+              id: 'title',
+              header: t('Title'),
               cellClassName: 'max-w-xs truncate',
-              cell: (announcement) => announcement.content,
+              cell: (announcement) =>
+                announcement.title || announcement.content,
             },
             {
               id: 'publish-date',
@@ -469,6 +478,27 @@ export function AnnouncementsSection({
             onSubmit={form.handleSubmit(handleSubmitForm)}
             className='space-y-4'
           >
+            <FormField
+              control={form.control}
+              name='title'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('Announcement title')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder={t(
+                        'A short summary shown in the announcement list'
+                      )}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('Optional. Maximum 100 characters.')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name='content'

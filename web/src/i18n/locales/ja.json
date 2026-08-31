@@ -5354,5 +5354,10 @@
   "BSC RPC URL": "BSC RPC URL",
   "Receiving wallet addresses": "受取ウォレットアドレス",
   "Current password": "現在のパスワード",
-  "USDT BEP-20 settings saved": "USDT BEP-20の設定を保存しました"
+  "USDT BEP-20 settings saved": "USDT BEP-20の設定を保存しました",
+  "System Announcements": "システムのお知らせ",
+  "Announcement title": "お知らせのタイトル",
+  "A short summary shown in the announcement list": "お知らせ一覧に表示される短い要約",
+  "Optional. Maximum 100 characters.": "任意。100文字以内。",
+  "Latest system update": "最新のシステム更新"
 }

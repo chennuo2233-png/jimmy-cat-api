@@ -5354,5 +5354,10 @@
   "BSC RPC URL": "URL RPC для BSC",
   "Receiving wallet addresses": "Адреса кошельков для приёма платежей",
   "Current password": "Текущий пароль",
-  "USDT BEP-20 settings saved": "Настройки USDT BEP-20 сохранены"
+  "USDT BEP-20 settings saved": "Настройки USDT BEP-20 сохранены",
+  "System Announcements": "Системные объявления",
+  "Announcement title": "Заголовок объявления",
+  "A short summary shown in the announcement list": "Краткое описание, отображаемое в списке объявлений",
+  "Optional. Maximum 100 characters.": "Необязательно. Не более 100 символов.",
+  "Latest system update": "Последнее обновление платформы"
 }

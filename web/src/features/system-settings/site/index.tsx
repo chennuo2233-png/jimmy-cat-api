@@ -36,6 +36,8 @@ const defaultSiteSettings: SiteSettings = {
   'legal.privacy_policy': '',
   HeaderNavModules: '',
   SidebarModulesAdmin: '',
+  'console_setting.announcements': '[]',
+  'console_setting.announcements_enabled': true,
 }
 
 export function SiteSettings() {

@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Dialog } from '@/components/dialog'
 import { RichContent } from '@/components/rich-content'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useStatus } from '@/hooks/use-status'
 import { formatDateTimeObject } from '@/lib/time'
@@ -28,6 +29,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { useNotificationStore } from '@/stores/notification-store'
 
 type Announcement = {
+  title?: string
   content: string
   publishDate?: string
   extra?: string
@@ -87,7 +89,7 @@ export function DailyAnnouncementDialog() {
     <Dialog
       open={open}
       onOpenChange={handleOpenChange}
-      title={t('System Announcement')}
+      title={latestAnnouncement.title?.trim() || t('System Announcement')}
       description={
         latestAnnouncement.publishDate
           ? `${t('Published:')} ${formatDateTimeObject(new Date(latestAnnouncement.publishDate))}`
@@ -101,6 +103,7 @@ export function DailyAnnouncementDialog() {
       }
     >
       <div className='space-y-4'>
+        <Badge variant='secondary'>{t('Latest system update')}</Badge>
         <RichContent breaks content={latestAnnouncement.content} />
         {latestAnnouncement.extra ? (
           <div className='text-muted-foreground text-sm'>

@@ -50,6 +50,7 @@ beforeEach(() => {
       announcements_enabled: true,
       announcements: [
         {
+          title: 'Service maintenance completed',
           content: 'Scheduled maintenance is complete.',
           publishDate: '2026-08-31T00:00:00Z',
         },
@@ -76,6 +77,9 @@ describe('DailyAnnouncementDialog', () => {
 
     expect(
       await screen.findByText('Scheduled maintenance is complete.')
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('Service maintenance completed')
     ).toBeInTheDocument()
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Close' }))
