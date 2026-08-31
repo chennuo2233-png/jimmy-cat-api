@@ -42,9 +42,8 @@ await i18n.use(initReactI18next).init({
         'Important payment information': 'Важная информация об оплате',
         'Payment is checked automatically after 12 BSC confirmations.':
           'Платёж будет проверен автоматически после 12 подтверждений в сети BSC.',
-        'Payment received. Your redemption code is ready.':
-          'Платёж получен. Ваш код пополнения готов.',
-        'Redemption Code': 'Код пополнения',
+        'Payment received. Your balance has been credited automatically.':
+          'Платёж получен. Средства автоматически зачислены на ваш баланс.',
         'This payment order has expired.':
           'Срок действия этого платёжного заказа истёк.',
         'Transfer issue or refund?': 'Ошибка при переводе или нужен возврат?',
@@ -124,5 +123,41 @@ describe('USDT BEP-20 payment dialog', () => {
         name: 'Свяжитесь с нами в Telegram: @Jmm_JimmyCat',
       })
     ).toHaveAttribute('href', 'https://t.me/Jmm_JimmyCat')
+  })
+
+  test('shows automatic credit confirmation after the payment is settled', async () => {
+    vi.mocked(getUSDTBEP20PaymentOrder).mockResolvedValue({
+      data: {
+        address: '0x1234567890123456789012345678901234567890',
+        amount: '10.001000',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_BEP20-test',
+        status: 'success',
+      },
+    })
+    window.location.hash = '#usdt-bep20-payment'
+    window.sessionStorage.setItem(
+      'usdt-bep20-order',
+      JSON.stringify({
+        address: '0x1234567890123456789012345678901234567890',
+        amount: '10.001000',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_BEP20-test',
+        status: 'success',
+      })
+    )
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <USDTBEP20PaymentDialog />
+      </I18nextProvider>
+    )
+
+    expect(
+      await screen.findAllByText(
+        'Платёж получен. Средства автоматически зачислены на ваш баланс.'
+      )
+    ).toHaveLength(2)
+    expect(screen.queryByText('Код пополнения')).not.toBeInTheDocument()
   })
 })

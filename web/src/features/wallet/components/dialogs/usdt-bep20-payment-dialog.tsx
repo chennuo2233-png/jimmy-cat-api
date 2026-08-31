@@ -22,7 +22,6 @@ type Order = {
   order_id: string
   expires_at: number
   status?: string
-  cdk?: string
 }
 
 export function USDTBEP20PaymentDialog() {
@@ -56,7 +55,13 @@ export function USDTBEP20PaymentDialog() {
   }, [loadPaymentOrder])
 
   useEffect(() => {
-    if (!order || order.cdk || order.expires_at * 1000 <= Date.now()) return
+    if (
+      !order ||
+      order.status === 'success' ||
+      order.expires_at * 1000 <= Date.now()
+    ) {
+      return
+    }
     let cancelled = false
     const check = async () => {
       setChecking(true)
@@ -65,16 +70,18 @@ export function USDTBEP20PaymentDialog() {
         const next = result.data as Order | undefined
         if (!cancelled && next) {
           setOrder((current) =>
-            current?.status === next.status && current?.cdk === next.cdk
-              ? current
-              : next
+            current?.status === next.status ? current : next
           )
           window.sessionStorage.setItem(
             'usdt-bep20-order',
             JSON.stringify(next)
           )
-          if (next.cdk) {
-            toast.success(t('Payment received. Your redemption code is ready.'))
+          if (next.status === 'success') {
+            toast.success(
+              t(
+                'Payment received. Your balance has been credited automatically.'
+              )
+            )
           }
         }
       } finally {
@@ -98,8 +105,9 @@ export function USDTBEP20PaymentDialog() {
     await navigator.clipboard.writeText(value)
     toast.success(t('Copied'))
   }
-  const expired = !!order && order.expires_at * 1000 <= Date.now() && !order.cdk
-  const redemptionCode = order?.cdk
+  const paymentReceived = order?.status === 'success'
+  const expired =
+    !!order && order.expires_at * 1000 <= Date.now() && !paymentReceived
 
   return (
     <Dialog open={!!order} onOpenChange={(open) => !open && close()}>
@@ -107,27 +115,23 @@ export function USDTBEP20PaymentDialog() {
         <DialogHeader>
           <DialogTitle>USDT (BEP-20)</DialogTitle>
           <DialogDescription>
-            {order?.cdk
-              ? t('Payment received. Your redemption code is ready.')
+            {paymentReceived
+              ? t(
+                  'Payment received. Your balance has been credited automatically.'
+                )
               : t('Complete the transfer using the exact amount below.')}
           </DialogDescription>
         </DialogHeader>
         {order && (
           <div className='flex min-w-0 flex-col gap-4'>
-            {redemptionCode ? (
+            {paymentReceived ? (
               <div className='rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4'>
-                <div className='mb-2 flex items-center gap-2 font-medium text-emerald-600 dark:text-emerald-400'>
+                <div className='flex items-center gap-2 font-medium text-emerald-600 dark:text-emerald-400'>
                   <CheckCircle2 className='size-4' />
-                  {t('Redemption Code')}
+                  {t(
+                    'Payment received. Your balance has been credited automatically.'
+                  )}
                 </div>
-                <Button
-                  variant='outline'
-                  className='w-full font-mono break-all'
-                  onClick={() => copy(redemptionCode)}
-                >
-                  {redemptionCode}
-                  <Copy className='ml-2 size-4 shrink-0' />
-                </Button>
               </div>
             ) : (
               <>

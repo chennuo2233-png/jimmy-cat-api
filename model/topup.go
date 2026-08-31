@@ -235,57 +235,55 @@ func GetRedemptionForUSDTBEP20TopUp(topUp *TopUp) (*Redemption, error) {
 	return redemption, nil
 }
 
-func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (*Redemption, error) {
+// CompleteUSDTBEP20TopUp settles a confirmed on-chain payment and credits the
+// purchaser directly. Keeping the credit and order transition in one
+// transaction prevents repeated scans from crediting an order more than once.
+func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (bool, error) {
 	if tradeNo == "" || txHash == "" {
-		return nil, ErrInvalidTopUpQuota
+		return false, ErrInvalidTopUpQuota
 	}
 
-	var issued *Redemption
+	var topUp TopUp
+	creditedQuota := 0
+	completed := false
 	err := DB.Transaction(func(tx *gorm.DB) error {
-		topUp := &TopUp{}
-		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(topUp).Error; err != nil {
+		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil {
 			return ErrTopUpNotFound
 		}
 		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 {
 			return ErrPaymentMethodMismatch
 		}
 		if topUp.Status == common.TopUpStatusSuccess {
-			if topUp.RedemptionId == 0 {
-				return ErrTopUpStatusInvalid
-			}
-			issued = &Redemption{}
-			return tx.Where("id = ?", topUp.RedemptionId).First(issued).Error
+			return nil
 		}
 		if topUp.Status != common.TopUpStatusPending || topUp.PaymentExpireAt <= common.GetTimestamp() || topUp.PaymentTxHash != nil {
 			return ErrTopUpStatusInvalid
 		}
-
-		key, err := common.GenerateRandomCharsKey(32)
-		if err != nil {
+		if topUp.Amount <= 0 || topUp.Amount > int64(common.MaxWalletQuota) {
+			return ErrInvalidTopUpQuota
+		}
+		creditedQuota = int(topUp.Amount)
+		if err := creditTopUpQuota(tx, topUp.UserId, creditedQuota, nil); err != nil {
 			return err
 		}
-		issued = &Redemption{
-			UserId:      topUp.UserId,
-			Key:         key,
-			Status:      common.RedemptionCodeStatusEnabled,
-			Name:        "USDT BEP-20 " + topUp.TradeNo,
-			Quota:       int(topUp.Amount),
-			CreatedTime: common.GetTimestamp(),
-		}
-		if err := tx.Create(issued).Error; err != nil {
-			return err
-		}
-
 		topUp.PaymentTxHash = &txHash
 		topUp.CompleteTime = common.GetTimestamp()
 		topUp.Status = common.TopUpStatusSuccess
-		topUp.RedemptionId = issued.Id
-		return tx.Save(topUp).Error
+		if err := tx.Save(&topUp).Error; err != nil {
+			return err
+		}
+		completed = true
+		return nil
 	})
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	return issued, nil
+	if completed {
+		syncCreditUserQuotaCache(topUp.UserId, creditedQuota, "usdt bep20 topup")
+		common.SysLog(fmt.Sprintf("USDT BEP-20充值成功 trade_no=%s user_id=%d quota_to_add=%d money=%.6f", topUp.TradeNo, topUp.UserId, creditedQuota, topUp.Money))
+		RecordTopupLog(topUp.UserId, fmt.Sprintf("USDT BEP-20充值成功，充值额度: %v，支付金额：%.6f", logger.FormatQuota(creditedQuota), topUp.Money), "", topUp.PaymentMethod, PaymentProviderUSDTBEP20)
+	}
+	return completed, nil
 }
 
 func GetTopUpById(id int) *TopUp {

@@ -37,7 +37,6 @@ type usdtBEP20OrderResponse struct {
 	Network   string `json:"network"`
 	ExpiresAt int64  `json:"expires_at"`
 	Status    string `json:"status"`
-	CDK       string `json:"cdk,omitempty"`
 }
 
 // RequestUSDTBEP20Pay reserves a unique six-decimal USDT amount. The extra
@@ -140,13 +139,7 @@ func GetUSDTBEP20PayStatus(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "error", "data": "order not found"})
 		return
 	}
-	response := usdtBEP20OrderResponse{OrderID: order.TradeNo, Address: order.PaymentAddress, Amount: order.PaymentAmount, Network: "BEP-20", ExpiresAt: order.PaymentExpireAt, Status: order.Status}
-	if order.Status == common.TopUpStatusSuccess {
-		if redemption, err := model.GetRedemptionForUSDTBEP20TopUp(order); err == nil && redemption != nil {
-			response.CDK = redemption.Key
-		}
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "success", "data": response})
+	c.JSON(http.StatusOK, gin.H{"message": "success", "data": usdtBEP20OrderResponse{OrderID: order.TradeNo, Address: order.PaymentAddress, Amount: order.PaymentAmount, Network: "BEP-20", ExpiresAt: order.PaymentExpireAt, Status: order.Status}})
 }
 
 // ConfirmUSDTBEP20Pay remains a compatibility endpoint. It does not trust a
@@ -240,10 +233,11 @@ func scanUSDTBEP20Order(ctx context.Context, order model.TopUp) (bool, error) {
 		if !decimal.NewFromBigInt(amount, -18).Equal(expected) {
 			continue
 		}
-		if _, err := model.CompleteUSDTBEP20TopUp(order.TradeNo, strings.ToLower(log.TransactionHash)); err != nil {
+		settled, err := model.CompleteUSDTBEP20TopUp(order.TradeNo, strings.ToLower(log.TransactionHash))
+		if err != nil {
 			return false, err
 		}
-		return true, nil
+		return settled, nil
 	}
 	return false, nil
 }

@@ -3381,6 +3381,7 @@
     "Payment methods": "Phương thức thanh toán",
     "Payment Methods": "Phương thức thanh toán",
     "Payment page opened": "Đã mở trang thanh toán",
+    "Payment received. Your balance has been credited automatically.": "Đã nhận được thanh toán. Số dư của bạn đã được nạp tự động.",
     "Payment received. Your redemption code is ready.": "Đã nhận được thanh toán. Mã nạp tiền của bạn đã sẵn sàng.",
     "Payment request failed": "Yêu cầu thanh toán thất bại",
     "Payment return URL": "URL trả về thanh toán",
