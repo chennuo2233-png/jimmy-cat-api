@@ -319,6 +319,39 @@ export function RedemptionsMutateDrawer({
 
                 <FormField
                   control={form.control}
+                  name='user_id'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('Restricted user ID (optional)')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          min='1'
+                          step='1'
+                          value={field.value ?? ''}
+                          placeholder={t('Enter a user ID')}
+                          onChange={(event) => {
+                            const value = event.target.value
+                            field.onChange(
+                              value === '' ? undefined : Number(value)
+                            )
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        {t(
+                          'Only this user can redeem the code. Leave empty for any user.'
+                        )}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name='expired_time'
                   render={({ field }) => (
                     <FormItem>

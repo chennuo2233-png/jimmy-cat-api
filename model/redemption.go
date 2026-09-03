@@ -215,7 +215,7 @@ func (redemption *Redemption) Update() error {
 		return err
 	}
 	var err error
-	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time").Updates(redemption).Error
+	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time", "user_id").Updates(redemption).Error
 	return err
 }
 

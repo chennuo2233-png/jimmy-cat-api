@@ -143,6 +143,9 @@ function getSaveButton(): HTMLButtonElement {
 function getControlByLabel(labelText: 'Name'): HTMLInputElement
 function getControlByLabel(labelText: 'Quota (CNY)'): HTMLInputElement
 function getControlByLabel(labelText: 'Quota (USD)'): HTMLInputElement
+function getControlByLabel(
+  labelText: 'Restricted user ID (optional)'
+): HTMLInputElement
 function getControlByLabel(labelText: string): HTMLElement {
   const label = [...document.querySelectorAll<HTMLLabelElement>('label')].find(
     (candidate) => candidate.textContent?.trim() === labelText
@@ -274,6 +277,25 @@ describe('redemption drawer', () => {
     await waitFor(() => expect(updates).toHaveLength(1))
 
     expect(updates[0]?.quota).toBe(1000000)
+  })
+
+  test('updates the eligible user for an unused code', async () => {
+    const original = redemption(1)
+    const updates: Array<Record<string, unknown>> = []
+    apiClient.get = async () => ({ data: { success: true, data: original } })
+    apiClient.put = async (_url, data) => {
+      expect(data && typeof data === 'object').toBeTruthy()
+      updates.push(data as Record<string, unknown>)
+      return { data: { success: true, data: original } }
+    }
+
+    await renderDrawer(original)
+    await waitForLoadedForm()
+    changeInput(getControlByLabel('Restricted user ID (optional)'), '42')
+    submitForm()
+    await waitFor(() => expect(updates).toHaveLength(1))
+
+    expect(updates[0]?.user_id).toBe(42)
   })
 
   test('ignores an older response after switching records', async () => {

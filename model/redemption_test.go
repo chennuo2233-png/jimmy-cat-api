@@ -164,6 +164,29 @@ func TestRedeemRejectsWalletOverflow(t *testing.T) {
 	assert.Equal(t, common.RedemptionCodeStatusEnabled, redemption.Status)
 }
 
+func TestRedeemRestrictsCodesToTheirEligibleUser(t *testing.T) {
+	ownerID, _ := setupRedeemFixture(t, 500)
+	eligibleUser := &User{Username: "eligible-user", Password: "password", Status: common.UserStatusEnabled, Quota: 0}
+	require.NoError(t, DB.Create(eligibleUser).Error)
+
+	redemption := &Redemption{
+		Name:        "restricted-redemption",
+		Key:         "10000000000000000000000000000003",
+		UserId:      eligibleUser.Id,
+		Status:      common.RedemptionCodeStatusEnabled,
+		Quota:       500,
+		CreatedTime: common.GetTimestamp(),
+	}
+	require.NoError(t, redemption.Insert())
+
+	_, err := Redeem(redemption.Key, ownerID)
+	require.ErrorIs(t, err, ErrRedeemFailed)
+
+	quota, err := Redeem(redemption.Key, eligibleUser.Id)
+	require.NoError(t, err)
+	assert.Equal(t, 500, quota)
+}
+
 func TestRedemptionQuotaRejectsWalletOverflow(t *testing.T) {
 	setupRedeemFixture(t, 500)
 

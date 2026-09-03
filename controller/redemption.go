@@ -90,6 +90,16 @@ func AddRedemption(c *gin.Context) {
 		common.ApiError(c, errors.New("redemption quota must be positive"))
 		return
 	}
+	if redemption.UserId < 0 {
+		common.ApiError(c, errors.New("redemption user id must not be negative"))
+		return
+	}
+	if redemption.UserId > 0 {
+		if _, err := model.GetUserById(redemption.UserId, false); err != nil {
+			common.ApiError(c, errors.New("specified redemption user does not exist"))
+			return
+		}
+	}
 	if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
 		common.ApiError(c, err)
 		return
@@ -102,7 +112,7 @@ func AddRedemption(c *gin.Context) {
 	for i := 0; i < redemption.Count; i++ {
 		key := common.GetUUID()
 		cleanRedemption := model.Redemption{
-			UserId:      c.GetInt("id"),
+			UserId:      redemption.UserId,
 			Name:        redemption.Name,
 			Key:         key,
 			CreatedTime: common.GetTimestamp(),
@@ -122,9 +132,10 @@ func AddRedemption(c *gin.Context) {
 		keys = append(keys, key)
 	}
 	recordManageAudit(c, "redemption.create", map[string]interface{}{
-		"name":  redemption.Name,
-		"count": redemption.Count,
-		"quota": logger.LogQuota(redemption.Quota),
+		"name":             redemption.Name,
+		"count":            redemption.Count,
+		"quota":            logger.LogQuota(redemption.Quota),
+		"eligible_user_id": redemption.UserId,
 	})
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -166,6 +177,20 @@ func UpdateRedemption(c *gin.Context) {
 			common.ApiError(c, errors.New("redemption quota must be positive"))
 			return
 		}
+		if redemption.UserId < 0 {
+			common.ApiError(c, errors.New("redemption user id must not be negative"))
+			return
+		}
+		if redemption.UserId > 0 {
+			if _, err := model.GetUserById(redemption.UserId, false); err != nil {
+				common.ApiError(c, errors.New("specified redemption user does not exist"))
+				return
+			}
+		}
+		if cleanRedemption.RedeemedTime > 0 && redemption.UserId != cleanRedemption.UserId {
+			common.ApiError(c, errors.New("cannot change the eligible user after the code has been redeemed"))
+			return
+		}
 		if err := common.ValidateWalletQuota(redemption.Quota); err != nil {
 			common.ApiError(c, err)
 			return
@@ -177,6 +202,7 @@ func UpdateRedemption(c *gin.Context) {
 		// If you add more fields, please also update redemption.Update()
 		cleanRedemption.Name = redemption.Name
 		cleanRedemption.Quota = redemption.Quota
+		cleanRedemption.UserId = redemption.UserId
 		cleanRedemption.ExpiredTime = redemption.ExpiredTime
 	}
 	if statusOnly != "" {

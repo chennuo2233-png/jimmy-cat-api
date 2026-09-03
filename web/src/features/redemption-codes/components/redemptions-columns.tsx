@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { type ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef } from '@tanstack/react-table'
 import { useTranslation } from 'react-i18next'
 
 import { MaskedValueDisplay } from '@/components/masked-value-display'
@@ -32,7 +32,7 @@ import { formatQuota, formatTimestampToDate } from '@/lib/format'
 
 import { REDEMPTION_FILTER_EXPIRED, REDEMPTION_STATUSES } from '../constants'
 import { isRedemptionExpired, isTimestampExpired } from '../lib'
-import { type Redemption } from '../types'
+import type { Redemption } from '../types'
 import { DataTableRowActions } from './data-table-row-actions'
 
 export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
@@ -80,6 +80,25 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
         <span className='font-medium'>{row.getValue('name')}</span>
       ),
       size: 180,
+    },
+    {
+      accessorKey: 'user_id',
+      header: t('Eligible User'),
+      meta: { mobileHidden: true },
+      cell: ({ row }) => {
+        const userId = row.getValue('user_id') as number
+        return (
+          <StatusBadge
+            label={
+              userId > 0 ? t('User {{id}}', { id: userId }) : t('Any user')
+            }
+            variant='neutral'
+            copyable={false}
+            className='-ml-1.5'
+          />
+        )
+      },
+      size: 140,
     },
     {
       accessorKey: 'status',
@@ -233,7 +252,7 @@ export function useRedemptionsColumns(): ColumnDef<Redemption>[] {
                   className='cursor-help'
                 />
               }
-            ></TooltipTrigger>
+            />
             <TooltipContent>
               <div className='space-y-1 text-xs'>
                 <div>
