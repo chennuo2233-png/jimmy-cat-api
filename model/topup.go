@@ -41,16 +41,27 @@ type USDTBEP20PaymentReference struct {
 	ReservedUntil int64  `json:"reserved_until" gorm:"bigint;index"`
 }
 
+// USDTTRC20PaymentReference keeps TRON address/amount reservations separate
+// from BSC reservations. TRON addresses are case-sensitive Base58Check values.
+type USDTTRC20PaymentReference struct {
+	Id            int    `json:"id"`
+	TopUpId       int    `json:"top_up_id" gorm:"uniqueIndex"`
+	Address       string `json:"address" gorm:"type:varchar(64);uniqueIndex:idx_usdt_trc20_reference"`
+	Amount        string `json:"amount" gorm:"type:varchar(32);uniqueIndex:idx_usdt_trc20_reference"`
+	ReservedUntil int64  `json:"reserved_until" gorm:"bigint;index"`
+}
+
 const (
 	PaymentMethodStripe       = "stripe"
 	PaymentMethodCreem        = "creem"
 	PaymentMethodWaffo        = "waffo"
 	PaymentMethodWaffoPancake = "waffo_pancake"
 	PaymentMethodUSDTBEP20    = "usdt_bep20"
+	PaymentMethodUSDTTRC20    = "usdt_trc20"
 	PaymentMethodBalance      = "balance"
 )
 
-const maxPendingUSDTBEP20TopUpsPerUser = 2
+const maxPendingUSDTOnchainTopUpsPerUser = 2
 
 const (
 	PaymentProviderEpay         = "epay"
@@ -59,8 +70,11 @@ const (
 	PaymentProviderWaffo        = "waffo"
 	PaymentProviderWaffoPancake = "waffo_pancake"
 	PaymentProviderUSDTBEP20    = "usdt_bep20"
+	PaymentProviderUSDTTRC20    = "usdt_trc20"
 	PaymentProviderBalance      = "balance"
 )
+
+var usdtOnchainPaymentProviders = []string{PaymentProviderUSDTBEP20, PaymentProviderUSDTTRC20}
 
 var (
 	ErrPaymentMethodMismatch    = errors.New("payment method mismatch")
@@ -70,6 +84,7 @@ var (
 	ErrTopUpQuotaLimitExceeded  = errors.New("top-up quota limit exceeded")
 	ErrWalletQuotaLimitExceeded = errors.New("wallet quota limit exceeded")
 	ErrUSDTBEP20AmountReserved  = errors.New("usdt bep20 payment amount is already reserved")
+	ErrUSDTTRC20AmountReserved  = errors.New("usdt trc20 payment amount is already reserved")
 )
 
 func (topUp *TopUp) Insert() error {
@@ -82,49 +97,9 @@ func (topUp *TopUp) Insert() error {
 // address/amount pair. References remain unavailable after order expiry for a
 // short grace period, so a delayed transfer cannot be mistaken for a new order.
 func CreateUSDTBEP20TopUp(topUp *TopUp) error {
-	if topUp == nil || topUp.PaymentProvider != PaymentProviderUSDTBEP20 || topUp.PaymentAddress == "" || topUp.PaymentAmount == "" || topUp.PaymentExpireAt <= common.GetTimestamp() {
-		return ErrInvalidTopUpQuota
-	}
-
-	return DB.Transaction(func(tx *gorm.DB) error {
-		now := common.GetTimestamp()
-		// Lock the user row so concurrent checkout requests from the same user
-		// cannot each observe fewer than two active orders.
-		if err := lockForUpdate(tx).Where("id = ?", topUp.UserId).First(&User{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("reserved_until <= ?", now).Delete(&USDTBEP20PaymentReference{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Model(&TopUp{}).Where(
-			"user_id = ? AND payment_provider = ? AND status = ? AND payment_expire_at <= ?",
-			topUp.UserId,
-			PaymentProviderUSDTBEP20,
-			common.TopUpStatusPending,
-			now,
-		).Update("status", common.TopUpStatusExpired).Error; err != nil {
-			return err
-		}
-		var pendingOrders []TopUp
-		if err := lockForUpdate(tx).Where(
-			"user_id = ? AND payment_provider = ? AND status = ? AND payment_expire_at > ?",
-			topUp.UserId,
-			PaymentProviderUSDTBEP20,
-			common.TopUpStatusPending,
-			now,
-		).Order("create_time ASC, id ASC").Find(&pendingOrders).Error; err != nil {
-			return err
-		}
-		for len(pendingOrders) >= maxPendingUSDTBEP20TopUpsPerUser {
-			oldest := pendingOrders[0]
-			if err := tx.Model(&TopUp{}).Where("id = ? AND status = ?", oldest.Id, common.TopUpStatusPending).Update("status", common.TopUpStatusExpired).Error; err != nil {
-				return err
-			}
-			pendingOrders = pendingOrders[1:]
-		}
-		if err := tx.Create(topUp).Error; err != nil {
-			return err
-		}
+	return createUSDTOnchainTopUp(topUp, PaymentProviderUSDTBEP20, func(tx *gorm.DB, now int64) error {
+		return tx.Where("reserved_until <= ?", now).Delete(&USDTBEP20PaymentReference{}).Error
+	}, func(tx *gorm.DB) error {
 		reference := &USDTBEP20PaymentReference{
 			TopUpId:       topUp.Id,
 			Address:       topUp.PaymentAddress,
@@ -135,6 +110,71 @@ func CreateUSDTBEP20TopUp(topUp *TopUp) error {
 			return ErrUSDTBEP20AmountReserved
 		}
 		return nil
+	})
+}
+
+func CreateUSDTTRC20TopUp(topUp *TopUp) error {
+	return createUSDTOnchainTopUp(topUp, PaymentProviderUSDTTRC20, func(tx *gorm.DB, now int64) error {
+		return tx.Where("reserved_until <= ?", now).Delete(&USDTTRC20PaymentReference{}).Error
+	}, func(tx *gorm.DB) error {
+		reference := &USDTTRC20PaymentReference{
+			TopUpId:       topUp.Id,
+			Address:       topUp.PaymentAddress,
+			Amount:        topUp.PaymentAmount,
+			ReservedUntil: topUp.PaymentExpireAt + int64(2*time.Hour/time.Second),
+		}
+		if err := tx.Create(reference).Error; err != nil {
+			return ErrUSDTTRC20AmountReserved
+		}
+		return nil
+	})
+}
+
+func createUSDTOnchainTopUp(topUp *TopUp, provider string, clearExpired func(*gorm.DB, int64) error, reserve func(*gorm.DB) error) error {
+	if topUp == nil || topUp.PaymentProvider != provider || topUp.PaymentAddress == "" || topUp.PaymentAmount == "" || topUp.PaymentExpireAt <= common.GetTimestamp() {
+		return ErrInvalidTopUpQuota
+	}
+
+	return DB.Transaction(func(tx *gorm.DB) error {
+		now := common.GetTimestamp()
+		// Lock the user row so simultaneous checkout requests across BSC and
+		// TRON cannot bypass the shared two-pending-order limit.
+		if err := lockForUpdate(tx).Where("id = ?", topUp.UserId).First(&User{}).Error; err != nil {
+			return err
+		}
+		if err := clearExpired(tx, now); err != nil {
+			return err
+		}
+		if err := tx.Model(&TopUp{}).Where(
+			"user_id = ? AND payment_provider IN ? AND status = ? AND payment_expire_at <= ?",
+			topUp.UserId,
+			usdtOnchainPaymentProviders,
+			common.TopUpStatusPending,
+			now,
+		).Update("status", common.TopUpStatusExpired).Error; err != nil {
+			return err
+		}
+		var pendingOrders []TopUp
+		if err := lockForUpdate(tx).Where(
+			"user_id = ? AND payment_provider IN ? AND status = ? AND payment_expire_at > ?",
+			topUp.UserId,
+			usdtOnchainPaymentProviders,
+			common.TopUpStatusPending,
+			now,
+		).Order("create_time ASC, id ASC").Find(&pendingOrders).Error; err != nil {
+			return err
+		}
+		for len(pendingOrders) >= maxPendingUSDTOnchainTopUpsPerUser {
+			oldest := pendingOrders[0]
+			if err := tx.Model(&TopUp{}).Where("id = ? AND status = ?", oldest.Id, common.TopUpStatusPending).Update("status", common.TopUpStatusExpired).Error; err != nil {
+				return err
+			}
+			pendingOrders = pendingOrders[1:]
+		}
+		if err := tx.Create(topUp).Error; err != nil {
+			return err
+		}
+		return reserve(tx)
 	})
 }
 
@@ -233,10 +273,18 @@ func RechargeUSDTBEP20(tradeNo string) error {
 }
 
 func GetPendingUSDTBEP20TopUps() ([]TopUp, error) {
+	return getPendingUSDTOnchainTopUps(PaymentProviderUSDTBEP20)
+}
+
+func GetPendingUSDTTRC20TopUps() ([]TopUp, error) {
+	return getPendingUSDTOnchainTopUps(PaymentProviderUSDTTRC20)
+}
+
+func getPendingUSDTOnchainTopUps(provider string) ([]TopUp, error) {
 	var orders []TopUp
 	err := DB.Where(
 		"payment_provider = ? AND status = ? AND payment_expire_at > ? AND payment_tx_hash IS NULL",
-		PaymentProviderUSDTBEP20,
+		provider,
 		common.TopUpStatusPending,
 		common.GetTimestamp(),
 	).Find(&orders).Error
@@ -246,21 +294,37 @@ func GetPendingUSDTBEP20TopUps() ([]TopUp, error) {
 // ExpireUSDTBEP20PendingTopUps closes orders that have reached their payment
 // deadline so they are never considered by the chain scanner again.
 func ExpireUSDTBEP20PendingTopUps() error {
+	return expireUSDTOnchainPendingTopUps(PaymentProviderUSDTBEP20)
+}
+
+func ExpireUSDTTRC20PendingTopUps() error {
+	return expireUSDTOnchainPendingTopUps(PaymentProviderUSDTTRC20)
+}
+
+func expireUSDTOnchainPendingTopUps(provider string) error {
 	return DB.Model(&TopUp{}).Where(
 		"payment_provider = ? AND status = ? AND payment_expire_at <= ?",
-		PaymentProviderUSDTBEP20,
+		provider,
 		common.TopUpStatusPending,
 		common.GetTimestamp(),
 	).Update("status", common.TopUpStatusExpired).Error
 }
 
 func GetUSDTBEP20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
+	return getUSDTOnchainTopUpForUser(tradeNo, userID, PaymentProviderUSDTBEP20)
+}
+
+func GetUSDTTRC20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
+	return getUSDTOnchainTopUpForUser(tradeNo, userID, PaymentProviderUSDTTRC20)
+}
+
+func getUSDTOnchainTopUpForUser(tradeNo string, userID int, provider string) (*TopUp, error) {
 	var topUp TopUp
 	err := DB.Where(
 		"trade_no = ? AND user_id = ? AND payment_provider = ?",
 		tradeNo,
 		userID,
-		PaymentProviderUSDTBEP20,
+		provider,
 	).First(&topUp).Error
 	if err != nil {
 		return nil, err
@@ -283,6 +347,14 @@ func GetRedemptionForUSDTBEP20TopUp(topUp *TopUp) (*Redemption, error) {
 // purchaser directly. Keeping the credit and order transition in one
 // transaction prevents repeated scans from crediting an order more than once.
 func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (bool, error) {
+	return completeUSDTOnchainTopUp(tradeNo, txHash, PaymentProviderUSDTBEP20, "USDT BEP-20", "usdt bep20 topup")
+}
+
+func CompleteUSDTTRC20TopUp(tradeNo, txHash string) (bool, error) {
+	return completeUSDTOnchainTopUp(tradeNo, txHash, PaymentProviderUSDTTRC20, "USDT TRC-20", "usdt trc20 topup")
+}
+
+func completeUSDTOnchainTopUp(tradeNo, txHash, provider, displayName, cacheReason string) (bool, error) {
 	if tradeNo == "" || txHash == "" {
 		return false, ErrInvalidTopUpQuota
 	}
@@ -294,7 +366,7 @@ func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (bool, error) {
 		if err := lockForUpdate(tx).Where("trade_no = ?", tradeNo).First(&topUp).Error; err != nil {
 			return ErrTopUpNotFound
 		}
-		if topUp.PaymentProvider != PaymentProviderUSDTBEP20 {
+		if topUp.PaymentProvider != provider {
 			return ErrPaymentMethodMismatch
 		}
 		if topUp.Status == common.TopUpStatusSuccess {
@@ -323,9 +395,9 @@ func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (bool, error) {
 		return false, err
 	}
 	if completed {
-		syncCreditUserQuotaCache(topUp.UserId, creditedQuota, "usdt bep20 topup")
-		common.SysLog(fmt.Sprintf("USDT BEP-20充值成功 trade_no=%s user_id=%d quota_to_add=%d money=%.6f", topUp.TradeNo, topUp.UserId, creditedQuota, topUp.Money))
-		RecordTopupLog(topUp.UserId, fmt.Sprintf("USDT BEP-20充值成功，充值额度: %v，支付金额：%.6f", logger.FormatQuota(creditedQuota), topUp.Money), "", topUp.PaymentMethod, PaymentProviderUSDTBEP20)
+		syncCreditUserQuotaCache(topUp.UserId, creditedQuota, cacheReason)
+		common.SysLog(fmt.Sprintf("%s充值成功 trade_no=%s user_id=%d quota_to_add=%d money=%.6f", displayName, topUp.TradeNo, topUp.UserId, creditedQuota, topUp.Money))
+		RecordTopupLog(topUp.UserId, fmt.Sprintf("%s充值成功，充值额度: %v，支付金额：%.6f", displayName, logger.FormatQuota(creditedQuota), topUp.Money), "", topUp.PaymentMethod, provider)
 	}
 	return completed, nil
 }

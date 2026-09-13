@@ -322,6 +322,7 @@ func migrateDB() error {
 		&Midjourney{},
 		&TopUp{},
 		&USDTBEP20PaymentReference{},
+		&USDTTRC20PaymentReference{},
 		&QuotaData{},
 		&Task{},
 		&Model{},

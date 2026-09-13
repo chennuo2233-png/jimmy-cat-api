@@ -301,6 +301,9 @@ export type BillingSettings = {
   'payment_setting.compliance_confirmed_ip': string
   USDTBEP20RPCURL: string
   USDTBEP20Addresses: string
+  USDTTRC20RPCURL: string
+  USDTTRC20SolidityURL: string
+  USDTTRC20Addresses: string
   StripeApiSecret: string
   StripeWebhookSecret: string
   StripePriceId: string

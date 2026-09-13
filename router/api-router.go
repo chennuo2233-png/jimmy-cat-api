@@ -113,6 +113,9 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.POST("/usdt-bep20/pay", middleware.CriticalRateLimit(), controller.RequestUSDTBEP20Pay)
 				selfRoute.GET("/usdt-bep20/order/:order_id", controller.GetUSDTBEP20PayStatus)
 				selfRoute.POST("/usdt-bep20/confirm", middleware.CriticalRateLimit(), controller.ConfirmUSDTBEP20Pay)
+				selfRoute.POST("/usdt-trc20/pay", middleware.CriticalRateLimit(), controller.RequestUSDTTRC20Pay)
+				selfRoute.GET("/usdt-trc20/order/:order_id", controller.GetUSDTTRC20PayStatus)
+				selfRoute.POST("/usdt-trc20/confirm", middleware.CriticalRateLimit(), controller.ConfirmUSDTTRC20Pay)
 				selfRoute.POST("/aff_transfer", middleware.UserCriticalRateLimit("aff-transfer"), controller.TransferAffQuota)
 				selfRoute.PUT("/setting", controller.UpdateUserSetting)
 
@@ -204,6 +207,7 @@ func SetApiRouter(router *gin.Engine) {
 			optionRoute.POST("/waffo-pancake/pair", controller.CreateWaffoPancakePair)
 			optionRoute.POST("/waffo-pancake/save", controller.SaveWaffoPancake)
 			optionRoute.POST("/usdt-bep20/save", controller.SaveUSDTBEP20Config)
+			optionRoute.POST("/usdt-trc20/save", controller.SaveUSDTTRC20Config)
 			optionRoute.POST("/waffo-pancake/subscription-product", controller.CreateWaffoPancakeSubscriptionProduct)
 			optionRoute.GET("/waffo-pancake/subscription-product-options", controller.ListWaffoPancakeSubscriptionProductOptions)
 		}

@@ -28,6 +28,7 @@ import {
   requestPayment,
   requestStripePayment,
   requestUSDTBEP20Payment,
+  requestUSDTTRC20Payment,
   isApiSuccess,
 } from '../api'
 import {
@@ -35,8 +36,10 @@ import {
   isWaffoPayment,
   isWaffoPancakePayment,
   isUSDTBEP20Payment,
+  isUSDTTRC20Payment,
   submitPaymentForm,
   USDT_BEP20_ORDER_CREATED_EVENT,
+  USDT_TRC20_ORDER_CREATED_EVENT,
 } from '../lib'
 import type { AmountRequest, AmountResponse } from '../types'
 
@@ -115,16 +118,35 @@ export function usePayment() {
         setProcessing(true)
 
         const isStripe = isStripePayment(paymentType)
-        const isUSDT = isUSDTBEP20Payment(paymentType)
+        const isUSDTBEP20 = isUSDTBEP20Payment(paymentType)
+        const isUSDTTRC20 = isUSDTTRC20Payment(paymentType)
         const amount = Math.floor(topupAmount)
 
-        if (isUSDT) {
-          const response = await requestUSDTBEP20Payment(amount)
+        if (isUSDTBEP20 || isUSDTTRC20) {
+          let response
+          let storageKey
+          let paymentHash
+          let createdEvent
+          if (isUSDTTRC20) {
+            response = await requestUSDTTRC20Payment(amount)
+            storageKey = 'usdt-trc20-order'
+            paymentHash = 'usdt-trc20-payment'
+            createdEvent = USDT_TRC20_ORDER_CREATED_EVENT
+          } else {
+            response = await requestUSDTBEP20Payment(amount)
+            storageKey = 'usdt-bep20-order'
+            paymentHash = 'usdt-bep20-payment'
+            createdEvent = USDT_BEP20_ORDER_CREATED_EVENT
+          }
           if (isApiSuccess(response) && response.data) {
-            const data = response.data as { address: string; amount: string; order_id: string }
-            window.sessionStorage.setItem('usdt-bep20-order', JSON.stringify(data))
-            window.location.hash = 'usdt-bep20-payment'
-            window.dispatchEvent(new Event(USDT_BEP20_ORDER_CREATED_EVENT))
+            const data = response.data as {
+              address: string
+              amount: string
+              order_id: string
+            }
+            window.sessionStorage.setItem(storageKey, JSON.stringify(data))
+            window.location.hash = paymentHash
+            window.dispatchEvent(new Event(createdEvent))
             return true
           }
           toast.error(response.message || i18next.t('Payment request failed'))

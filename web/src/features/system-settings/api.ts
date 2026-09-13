@@ -49,8 +49,22 @@ export async function confirmPaymentCompliance() {
   return res.data
 }
 
-export async function saveUSDTBEP20Config(request: { password: string; rpc_url: string; addresses: string[] }) {
+export async function saveUSDTBEP20Config(request: {
+  password: string
+  rpc_url: string
+  addresses: string[]
+}) {
   const res = await api.post('/api/option/usdt-bep20/save', request)
+  return res.data
+}
+
+export async function saveUSDTTRC20Config(request: {
+  password: string
+  rpc_url: string
+  solidity_url: string
+  addresses: string[]
+}) {
+  const res = await api.post('/api/option/usdt-trc20/save', request)
   return res.data
 }
 

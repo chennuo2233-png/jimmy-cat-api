@@ -22,11 +22,16 @@ import { createInstance } from 'i18next'
 import { initReactI18next, I18nextProvider } from 'react-i18next'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { getUSDTBEP20PaymentOrder } from '../../../api'
+import {
+  getUSDTBEP20PaymentOrder,
+  getUSDTTRC20PaymentOrder,
+} from '../../../api'
 import { USDTBEP20PaymentDialog } from '../usdt-bep20-payment-dialog'
+import { USDTTRC20PaymentDialog } from '../usdt-trc20-payment-dialog'
 
 vi.mock('../../../api', () => ({
   getUSDTBEP20PaymentOrder: vi.fn(),
+  getUSDTTRC20PaymentOrder: vi.fn(),
 }))
 
 const i18n = createInstance()
@@ -45,6 +50,8 @@ await i18n.use(initReactI18next).init({
           'Платёж будет проверен автоматически после 12 подтверждений в сети BSC.',
         'Payment received. Your balance has been credited automatically.':
           'Платёж получен. Средства автоматически зачислены на ваш баланс.',
+        'Payment is checked automatically after TRON finalization.':
+          'Платёж проверяется автоматически после окончательного подтверждения в сети TRON.',
         'This payment order has expired.':
           'Срок действия этого платёжного заказа истёк.',
         'Transfer issue or refund?': 'Ошибка при переводе или нужен возврат?',
@@ -188,5 +195,43 @@ describe('USDT BEP-20 payment dialog', () => {
       expect(window.location.hash).toBe('')
     })
     expect(window.sessionStorage.getItem('usdt-bep20-order')).toBeNull()
+  })
+
+  test('loads a TRC-20 order from its own storage and checks TRON finalization', async () => {
+    vi.mocked(getUSDTTRC20PaymentOrder).mockResolvedValue({
+      data: {
+        address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+        amount: '10.001000',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_TRC20-test',
+        status: 'pending',
+      },
+    })
+    window.location.hash = '#usdt-trc20-payment'
+    window.sessionStorage.setItem(
+      'usdt-trc20-order',
+      JSON.stringify({
+        address: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+        amount: '10.001000',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_TRC20-test',
+        status: 'pending',
+      })
+    )
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <USDTTRC20PaymentDialog />
+      </I18nextProvider>
+    )
+
+    expect(await screen.findByText('USDT (TRC-20)')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Платёж проверяется автоматически после окончательного подтверждения в сети TRON.'
+      )
+    ).toBeInTheDocument()
+    expect(getUSDTTRC20PaymentOrder).toHaveBeenCalledWith('USDT_TRC20-test')
+    expect(getUSDTBEP20PaymentOrder).not.toHaveBeenCalled()
   })
 })

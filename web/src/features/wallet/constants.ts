@@ -37,6 +37,7 @@ export const PAYMENT_TYPES = {
   WAFFO: 'waffo',
   WAFFO_PANCAKE: 'waffo_pancake',
   USDT_BEP20: 'usdt_bep20',
+  USDT_TRC20: 'usdt_trc20',
 } as const
 
 /**

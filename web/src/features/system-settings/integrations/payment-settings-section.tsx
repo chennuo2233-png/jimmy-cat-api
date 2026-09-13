@@ -48,7 +48,11 @@ import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-import { confirmPaymentCompliance, saveUSDTBEP20Config } from '../api'
+import {
+  confirmPaymentCompliance,
+  saveUSDTBEP20Config,
+  saveUSDTTRC20Config,
+} from '../api'
 import {
   SettingsForm,
   SettingsSwitchContent,
@@ -200,6 +204,12 @@ type USDTBEP20SettingsValues = {
   addresses: string
 }
 
+type USDTTRC20SettingsValues = {
+  rpcURL: string
+  solidityURL: string
+  addresses: string
+}
+
 type PaymentSettingsSectionProps = {
   defaultValues: PaymentBaseFormValues
   waffoDefaultValues: WaffoSettingsValues
@@ -207,6 +217,7 @@ type PaymentSettingsSectionProps = {
   waffoPancakeProvisionedStoreID?: string
   waffoPancakeProvisionedProductID?: string
   usdtDefaultValues: USDTBEP20SettingsValues
+  usdtTRC20DefaultValues: USDTTRC20SettingsValues
   complianceDefaults: PaymentComplianceDefaults
 }
 
@@ -226,6 +237,7 @@ export function PaymentSettingsSection({
   waffoPancakeProvisionedStoreID,
   waffoPancakeProvisionedProductID,
   usdtDefaultValues,
+  usdtTRC20DefaultValues,
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
@@ -237,6 +249,17 @@ export function PaymentSettingsSection({
   )
   const [usdtPassword, setUSDTBEP20Password] = React.useState('')
   const [savingUSDT, setSavingUSDT] = React.useState(false)
+  const [usdtTRC20RPCURL, setUSDTTRC20RPCURL] = React.useState(
+    usdtTRC20DefaultValues.rpcURL
+  )
+  const [usdtTRC20SolidityURL, setUSDTTRC20SolidityURL] = React.useState(
+    usdtTRC20DefaultValues.solidityURL
+  )
+  const [usdtTRC20Addresses, setUSDTTRC20Addresses] = React.useState(
+    usdtTRC20DefaultValues.addresses
+  )
+  const [usdtTRC20Password, setUSDTTRC20Password] = React.useState('')
+  const [savingUSDTTRC20, setSavingUSDTTRC20] = React.useState(false)
   const queryClient = useQueryClient()
   const updateOption = useUpdateOption()
 
@@ -244,6 +267,15 @@ export function PaymentSettingsSection({
     setUSDTBEP20RPCURL(usdtDefaultValues.rpcURL)
     setUSDTBEP20Addresses(usdtDefaultValues.addresses)
   }, [usdtDefaultValues.addresses, usdtDefaultValues.rpcURL])
+  React.useEffect(() => {
+    setUSDTTRC20RPCURL(usdtTRC20DefaultValues.rpcURL)
+    setUSDTTRC20SolidityURL(usdtTRC20DefaultValues.solidityURL)
+    setUSDTTRC20Addresses(usdtTRC20DefaultValues.addresses)
+  }, [
+    usdtTRC20DefaultValues.addresses,
+    usdtTRC20DefaultValues.rpcURL,
+    usdtTRC20DefaultValues.solidityURL,
+  ])
   const initialFormValues = React.useMemo<PaymentFormValues>(
     () => ({
       ...defaultValues,
@@ -897,7 +929,7 @@ export function PaymentSettingsSection({
           />
           <Tabs defaultValue='general' className='min-w-0'>
             <div className='overflow-x-auto pb-1'>
-              <TabsList className='grid min-w-[52rem] grid-cols-7'>
+              <TabsList className='grid min-w-[60rem] grid-cols-8'>
                 <TabsTrigger value='general'>{t('General')}</TabsTrigger>
                 <TabsTrigger value='epay'>Epay</TabsTrigger>
                 <TabsTrigger value='stripe'>{t('Stripe')}</TabsTrigger>
@@ -905,6 +937,7 @@ export function PaymentSettingsSection({
                 <TabsTrigger value='waffo-pancake'>Waffo Pancake</TabsTrigger>
                 <TabsTrigger value='waffo'>Waffo</TabsTrigger>
                 <TabsTrigger value='usdt-bep20'>USDT BEP-20</TabsTrigger>
+                <TabsTrigger value='usdt-trc20'>USDT TRC-20</TabsTrigger>
               </TabsList>
             </div>
 
@@ -1647,7 +1680,10 @@ export function PaymentSettingsSection({
                 onPayMethodsChange={setWaffoPayMethods}
               />
             </TabsContent>
-            <TabsContent value='usdt-bep20' className={paymentTabContentClassName}>
+            <TabsContent
+              value='usdt-bep20'
+              className={paymentTabContentClassName}
+            >
               <div className='space-y-4'>
                 <FormItem>
                   <FormLabel>{t('BSC RPC URL')}</FormLabel>
@@ -1663,7 +1699,9 @@ export function PaymentSettingsSection({
                   <FormLabel>{t('Receiving wallet addresses')}</FormLabel>
                   <Input
                     value={usdtAddresses}
-                    onChange={(event) => setUSDTBEP20Addresses(event.target.value)}
+                    onChange={(event) =>
+                      setUSDTBEP20Addresses(event.target.value)
+                    }
                     placeholder='0x..., 0x...'
                     autoComplete='off'
                   />
@@ -1673,17 +1711,16 @@ export function PaymentSettingsSection({
                   <Input
                     type='password'
                     value={usdtPassword}
-                    onChange={(event) => setUSDTBEP20Password(event.target.value)}
+                    onChange={(event) =>
+                      setUSDTBEP20Password(event.target.value)
+                    }
                     autoComplete='current-password'
                   />
                 </FormItem>
                 <Button
                   type='button'
                   disabled={
-                    savingUSDT ||
-                    !usdtPassword ||
-                    !usdtRPCURL ||
-                    !usdtAddresses
+                    savingUSDT || !usdtPassword || !usdtRPCURL || !usdtAddresses
                   }
                   onClick={async () => {
                     setSavingUSDT(true)
@@ -1718,7 +1755,116 @@ export function PaymentSettingsSection({
                     }
                   }}
                 >
-                  {savingUSDT && <Loader2 className='mr-2 size-4 animate-spin' />}
+                  {savingUSDT && (
+                    <Loader2 className='mr-2 size-4 animate-spin' />
+                  )}
+                  {t('Save')}
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent
+              value='usdt-trc20'
+              className={paymentTabContentClassName}
+            >
+              <div className='space-y-4'>
+                <FormItem>
+                  <FormLabel>{t('TRON JSON-RPC URL')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtTRC20RPCURL}
+                    onChange={(event) => setUSDTTRC20RPCURL(event.target.value)}
+                    placeholder='https://rpc.ankr.com/tron_jsonrpc/...'
+                    autoComplete='off'
+                  />
+                  <FormDescription>
+                    {t('Used to discover incoming TRC-20 transfers.')}
+                  </FormDescription>
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('TRON Solidity API base URL')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtTRC20SolidityURL}
+                    onChange={(event) =>
+                      setUSDTTRC20SolidityURL(event.target.value)
+                    }
+                    placeholder='https://rpc.ankr.com/premium-http/tron/...'
+                    autoComplete='off'
+                  />
+                  <FormDescription>
+                    {t(
+                      'Used to verify that a TRON transaction is finalized before crediting the balance.'
+                    )}
+                  </FormDescription>
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('Receiving TRON wallet addresses')}</FormLabel>
+                  <Input
+                    value={usdtTRC20Addresses}
+                    onChange={(event) =>
+                      setUSDTTRC20Addresses(event.target.value)
+                    }
+                    placeholder='T..., T...'
+                    autoComplete='off'
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('Current password')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtTRC20Password}
+                    onChange={(event) =>
+                      setUSDTTRC20Password(event.target.value)
+                    }
+                    autoComplete='current-password'
+                  />
+                </FormItem>
+                <Button
+                  type='button'
+                  disabled={
+                    savingUSDTTRC20 ||
+                    !usdtTRC20Password ||
+                    !usdtTRC20RPCURL ||
+                    !usdtTRC20SolidityURL ||
+                    !usdtTRC20Addresses
+                  }
+                  onClick={async () => {
+                    setSavingUSDTTRC20(true)
+                    try {
+                      const result = await saveUSDTTRC20Config({
+                        password: usdtTRC20Password,
+                        rpc_url: usdtTRC20RPCURL,
+                        solidity_url: usdtTRC20SolidityURL,
+                        addresses: usdtTRC20Addresses
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean),
+                      })
+                      if (result.success) {
+                        toast.success(t('USDT TRC-20 settings saved'))
+                        setUSDTTRC20Password('')
+                        await queryClient.invalidateQueries({
+                          queryKey: ['system-options'],
+                        })
+                      } else {
+                        toast.error(
+                          result.message || t('Failed to save settings')
+                        )
+                      }
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : t('Failed to save settings')
+                      )
+                    } finally {
+                      setSavingUSDTTRC20(false)
+                    }
+                  }}
+                >
+                  {savingUSDTTRC20 && (
+                    <Loader2 className='mr-2 size-4 animate-spin' />
+                  )}
                   {t('Save')}
                 </Button>
               </div>

@@ -190,7 +190,7 @@ func ScanUSDTBEP20PendingOrders(ctx context.Context) (int, error) {
 	return completed, nil
 }
 
-type bscLog struct {
+type tokenTransferLog struct {
 	Address         string   `json:"address"`
 	Topics          []string `json:"topics"`
 	Data            string   `json:"data"`
@@ -203,7 +203,7 @@ func scanUSDTBEP20Order(ctx context.Context, order model.TopUp) (bool, error) {
 		return false, nil
 	}
 	var latestHex string
-	if err := callBSCJSONRPC(ctx, "eth_blockNumber", []any{}, &latestHex); err != nil {
+	if err := callJSONRPC(ctx, setting.USDTBEP20RPCURL, "eth_blockNumber", []any{}, &latestHex); err != nil {
 		return false, err
 	}
 	latest, err := strconv.ParseInt(strings.TrimPrefix(latestHex, "0x"), 16, 64)
@@ -221,8 +221,8 @@ func scanUSDTBEP20Order(ctx context.Context, order model.TopUp) (bool, error) {
 		"address":   usdtBEP20Contract,
 		"topics":    []any{transferTopic, nil, toTopic},
 	}
-	var logs []bscLog
-	if err := callBSCJSONRPC(ctx, "eth_getLogs", []any{filter}, &logs); err != nil {
+	var logs []tokenTransferLog
+	if err := callJSONRPC(ctx, setting.USDTBEP20RPCURL, "eth_getLogs", []any{filter}, &logs); err != nil {
 		return false, err
 	}
 	expected := decimal.RequireFromString(order.PaymentAmount)
@@ -250,12 +250,12 @@ func scanUSDTBEP20Order(ctx context.Context, order model.TopUp) (bool, error) {
 	return false, nil
 }
 
-func callBSCJSONRPC(ctx context.Context, method string, params any, result any) error {
+func callJSONRPC(ctx context.Context, rpcURL, method string, params any, result any) error {
 	payload, err := common.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, setting.USDTBEP20RPCURL, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, rpcURL, bytes.NewReader(payload))
 	if err != nil {
 		return err
 	}

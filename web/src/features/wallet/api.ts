@@ -187,12 +187,29 @@ export async function requestUSDTBEP20Payment(amount: number) {
 }
 
 export async function confirmUSDTBEP20Payment(orderId: string, txHash: string) {
-  const res = await api.post('/api/user/usdt-bep20/confirm', { order_id: orderId, tx_hash: txHash })
+  const res = await api.post('/api/user/usdt-bep20/confirm', {
+    order_id: orderId,
+    tx_hash: txHash,
+  })
   return res.data
 }
 
 export async function getUSDTBEP20PaymentOrder(orderId: string) {
-  const res = await api.get(`/api/user/usdt-bep20/order/${encodeURIComponent(orderId)}`)
+  const res = await api.get(
+    `/api/user/usdt-bep20/order/${encodeURIComponent(orderId)}`
+  )
+  return res.data
+}
+
+export async function requestUSDTTRC20Payment(amount: number) {
+  const res = await api.post('/api/user/usdt-trc20/pay', { amount })
+  return res.data
+}
+
+export async function getUSDTTRC20PaymentOrder(orderId: string) {
+  const res = await api.get(
+    `/api/user/usdt-trc20/order/${encodeURIComponent(orderId)}`
+  )
   return res.data
 }
 

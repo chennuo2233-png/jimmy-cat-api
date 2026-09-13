@@ -126,6 +126,8 @@ export interface TopupInfo {
   enable_stripe_topup: boolean
   /** Whether USDT BEP-20 topup is enabled */
   enable_usdt_bep20_topup?: boolean
+  /** Whether USDT TRC-20 topup is enabled */
+  enable_usdt_trc20_topup?: boolean
   /** Available payment methods */
   pay_methods: PaymentMethod[]
   /** Minimum topup amount for online topup */
