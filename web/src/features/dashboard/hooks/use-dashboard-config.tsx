@@ -36,6 +36,7 @@ interface StatCardConfig {
   key: string
   title: string
   description: string
+  tooltip?: string
   icon: LucideIcon
   iconTone: IconBadgeTone
   getValue: (stat: Record<string, number>, days?: number) => number
@@ -64,7 +65,12 @@ export function useModelStatCardsConfig(): StatCardConfig[] {
     {
       key: 'tokens',
       title: t('Total Tokens'),
-      description: t('Statistical tokens'),
+      description: t(
+        'Only input and output tokens are included; cached tokens are excluded.'
+      ),
+      tooltip: t(
+        'Only input and output tokens are included; cached tokens are excluded.'
+      ),
       icon: Layers,
       iconTone: 'chart-4',
       getValue: (stat) => stat?.tpm ?? 0,

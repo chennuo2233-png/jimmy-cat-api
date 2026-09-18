@@ -16,11 +16,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Info } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { getUserQuotaDates } from '@/features/dashboard/api'
 import { useModelStatCardsConfig } from '@/features/dashboard/hooks/use-dashboard-config'
 import {
@@ -137,6 +144,7 @@ export function LogStatCards(props: LogStatCardsProps) {
       value: formatted.displayValue,
       fullValue: formatted.fullValue,
       desc: config.description,
+      tooltip: config.tooltip,
       icon: config.icon,
       iconTone: config.iconTone,
     }
@@ -200,8 +208,28 @@ export function LogStatCards(props: LogStatCardsProps) {
                 >
                   <Icon />
                 </IconBadge>
-                <div className='text-muted-foreground truncate text-[11px] leading-4 font-medium tracking-wide uppercase sm:text-xs sm:tracking-wider'>
-                  {it.title}
+                <div className='text-muted-foreground flex min-w-0 items-center gap-1 text-[11px] leading-4 font-medium tracking-wide uppercase sm:text-xs sm:tracking-wider'>
+                  <span className='truncate'>{it.title}</span>
+                  {it.tooltip ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <button
+                              type='button'
+                              className='text-muted-foreground/70 hover:text-foreground focus-visible:ring-ring flex size-4 shrink-0 items-center justify-center rounded-sm focus-visible:ring-2 focus-visible:outline-none'
+                              aria-label={`${it.title}: ${it.tooltip}`}
+                            />
+                          }
+                        >
+                          <Info className='size-3' aria-hidden='true' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-64 normal-case'>
+                          {it.tooltip}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : null}
                 </div>
               </div>
 
