@@ -544,7 +544,7 @@ export function RechargeFormCard({
               rel='noopener noreferrer'
               className='inline-flex items-center gap-1 underline-offset-4 hover:underline'
             >
-              {t('Telegram: @Jmm_JimmyCat')}
+              {t('Contact us on Telegram')}
               <ExternalLink className='h-3 w-3' />
             </a>
           </p>

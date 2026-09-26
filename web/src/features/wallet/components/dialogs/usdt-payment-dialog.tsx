@@ -205,7 +205,7 @@ export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
                       rel='noreferrer'
                       target='_blank'
                     >
-                      {t('Contact us on Telegram:')} @Jmm_JimmyCat
+                      {t('Contact us on Telegram')}
                     </a>
                   </details>
                 </div>

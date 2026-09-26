@@ -22,9 +22,9 @@ For commercial licensing, please contact support@quantumnous.com
 
 // System Configuration Defaults
 export const DEFAULT_SYSTEM_NAME = 'New API'
-// Bundled with the application so the JMM Cat brand does not rely on a
+// Bundled with the application so the AGAM AI brand does not rely on a
 // third-party image host. Administrators can still override this in Settings.
-export const DEFAULT_LOGO = '/jmm-cat-logo-round.png'
+export const DEFAULT_LOGO = '/agam-ai-mark.webp'
 
 // LocalStorage Keys
 export const STORAGE_KEYS = {

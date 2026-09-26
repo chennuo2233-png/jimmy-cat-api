@@ -42,7 +42,7 @@ await i18n.use(initReactI18next).init({
       translation: {
         'Complete the transfer using the exact amount below.':
           'Переведите точную сумму, указанную ниже.',
-        'Contact us on Telegram:': 'Свяжитесь с нами в Telegram:',
+        'Contact us on Telegram': 'Свяжитесь с нами в Telegram',
         Copied: 'Скопировано',
         'Important payment information': 'Важная информация об оплате',
         'Order expires in {{time}}': 'Заказ истечёт через {{time}}',
@@ -131,7 +131,7 @@ describe('USDT BEP-20 payment dialog', () => {
     expect(supportDetails).toHaveProperty('open', true)
     expect(
       screen.getByRole('link', {
-        name: 'Свяжитесь с нами в Telegram: @Jmm_JimmyCat',
+        name: 'Свяжитесь с нами в Telegram',
       })
     ).toHaveAttribute('href', 'https://t.me/Jmm_JimmyCat')
   })

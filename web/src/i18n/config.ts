@@ -44,7 +44,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    // JMM Cat targets Russian-speaking users. Keep a manually selected language,
+    // AGAM AI primarily serves Russian-speaking users. Keep a manually selected language,
     // but use Russian for every first-time visitor instead of browser detection.
     fallbackLng: 'ru',
     supportedLngs: ['en', 'zhCN', 'fr', 'ru', 'ja', 'vi', 'zhTW'],

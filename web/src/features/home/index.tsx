@@ -26,7 +26,7 @@ import { useTheme } from '@/context/theme-provider'
 import { isLikelyHtml } from '@/lib/content-format'
 import { useAuthStore } from '@/stores/auth-store'
 
-import { JimmyCatHome } from './components/jimmy-cat-home'
+import { AgamAiHome } from './components/agam-ai-home'
 import { useHomePageContent } from './hooks'
 
 export function Home() {
@@ -122,7 +122,7 @@ export function Home() {
 
   return (
     <PublicLayout showMainContainer={false}>
-      <JimmyCatHome isAuthenticated={isAuthenticated} />
+      <AgamAiHome isAuthenticated={isAuthenticated} />
       <Footer />
     </PublicLayout>
   )
