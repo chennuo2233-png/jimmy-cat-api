@@ -201,7 +201,7 @@ export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
                     </p>
                     <a
                       className='mt-2 inline-block font-semibold underline underline-offset-2'
-                      href='https://t.me/Jmm_JimmyCat'
+                      href='https://t.me/agam_ai'
                       rel='noreferrer'
                       target='_blank'
                     >

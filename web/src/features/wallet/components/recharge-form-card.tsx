@@ -539,7 +539,7 @@ export function RechargeFormCard({
               'We are continually improving our top-up system. For other payment methods, please contact us on Telegram.'
             )}{' '}
             <a
-              href='https://t.me/Jmm_JimmyCat'
+              href='https://t.me/agam_ai'
               target='_blank'
               rel='noopener noreferrer'
               className='inline-flex items-center gap-1 underline-offset-4 hover:underline'

@@ -133,7 +133,7 @@ describe('USDT BEP-20 payment dialog', () => {
       screen.getByRole('link', {
         name: 'Свяжитесь с нами в Telegram',
       })
-    ).toHaveAttribute('href', 'https://t.me/Jmm_JimmyCat')
+    ).toHaveAttribute('href', 'https://t.me/agam_ai')
   })
 
   test('shows automatic credit confirmation after the payment is settled', async () => {
