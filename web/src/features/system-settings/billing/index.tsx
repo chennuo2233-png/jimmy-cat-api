@@ -78,6 +78,8 @@ const defaultBillingSettings: BillingSettings = {
   USDTTRC20RPCURL: '',
   USDTTRC20SolidityURL: '',
   USDTTRC20Addresses: '',
+  USDTERC20RPCURL: '',
+  USDTERC20Addresses: '',
   StripeApiSecret: '',
   StripeWebhookSecret: '',
   StripePriceId: '',

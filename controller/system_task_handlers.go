@@ -26,6 +26,7 @@ func RegisterScheduledSystemTasks() {
 	service.RegisterSystemTaskHandler(asyncTaskPollHandler{})
 	service.RegisterSystemTaskHandler(usdtBEP20ScanHandler{})
 	service.RegisterSystemTaskHandler(usdtTRC20ScanHandler{})
+	service.RegisterSystemTaskHandler(usdtERC20ScanHandler{})
 }
 
 // channelTestHandler runs the scheduled "test all channels" job. Enablement and
@@ -193,6 +194,27 @@ func (usdtTRC20ScanHandler) NewPayload() any { return nil }
 
 func (usdtTRC20ScanHandler) Run(ctx context.Context, task *model.SystemTask, runnerID string) {
 	completed, err := ScanUSDTTRC20PendingOrders(ctx)
+	if err != nil {
+		finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusFailed, nil, err)
+		return
+	}
+	finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusSucceeded, map[string]int{"completed": completed}, nil)
+}
+
+type usdtERC20ScanHandler struct{}
+
+func (usdtERC20ScanHandler) Type() string { return model.SystemTaskTypeUSDTERC20Scan }
+
+func (usdtERC20ScanHandler) Enabled() bool {
+	return strings.TrimSpace(setting.USDTERC20RPCURL) != "" && strings.TrimSpace(setting.USDTERC20Addresses) != ""
+}
+
+func (usdtERC20ScanHandler) Interval() time.Duration { return 15 * time.Second }
+
+func (usdtERC20ScanHandler) NewPayload() any { return nil }
+
+func (usdtERC20ScanHandler) Run(ctx context.Context, task *model.SystemTask, runnerID string) {
+	completed, err := ScanUSDTERC20PendingOrders(ctx)
 	if err != nil {
 		finishSystemTaskHandler(task, runnerID, model.SystemTaskStatusFailed, nil, err)
 		return

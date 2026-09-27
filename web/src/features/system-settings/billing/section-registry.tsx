@@ -187,6 +187,10 @@ const BILLING_SECTIONS = [
           solidityURL: settings.USDTTRC20SolidityURL ?? '',
           addresses: settings.USDTTRC20Addresses ?? '',
         }}
+        usdtERC20DefaultValues={{
+          rpcURL: settings.USDTERC20RPCURL ?? '',
+          addresses: settings.USDTERC20Addresses ?? '',
+        }}
         complianceDefaults={{
           confirmed: settings['payment_setting.compliance_confirmed'] ?? false,
           termsVersion:

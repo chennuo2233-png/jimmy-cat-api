@@ -25,13 +25,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   getUSDTBEP20PaymentOrder,
   getUSDTTRC20PaymentOrder,
+  getUSDTERC20PaymentOrder,
 } from '../../../api'
 import { USDTBEP20PaymentDialog } from '../usdt-bep20-payment-dialog'
+import { USDTERC20PaymentDialog } from '../usdt-erc20-payment-dialog'
 import { USDTTRC20PaymentDialog } from '../usdt-trc20-payment-dialog'
 
 vi.mock('../../../api', () => ({
   getUSDTBEP20PaymentOrder: vi.fn(),
   getUSDTTRC20PaymentOrder: vi.fn(),
+  getUSDTERC20PaymentOrder: vi.fn(),
 }))
 
 const i18n = createInstance()
@@ -52,6 +55,10 @@ await i18n.use(initReactI18next).init({
           'Платёж получен. Средства автоматически зачислены на ваш баланс.',
         'Payment is checked automatically after TRON finalization.':
           'Платёж проверяется автоматически после окончательного подтверждения в сети TRON.',
+        'Payment is checked automatically after 12 Ethereum confirmations.':
+          'Платёж будет автоматически проверен после 12 подтверждений в сети Ethereum.',
+        'Only send USDT over the {{network}} network. Transfers from other networks cannot be credited automatically.':
+          'Отправляйте USDT только через сеть {{network}}. Переводы из других сетей не могут быть зачислены автоматически.',
         'This payment order has expired.':
           'Срок действия этого платёжного заказа истёк.',
         'Transfer issue or refund?': 'Ошибка при переводе или нужен возврат?',
@@ -233,5 +240,47 @@ describe('USDT BEP-20 payment dialog', () => {
     ).toBeInTheDocument()
     expect(getUSDTTRC20PaymentOrder).toHaveBeenCalledWith('USDT_TRC20-test')
     expect(getUSDTBEP20PaymentOrder).not.toHaveBeenCalled()
+  })
+
+  test('loads an ERC-20 order and warns that only the selected network is accepted', async () => {
+    vi.mocked(getUSDTERC20PaymentOrder).mockResolvedValue({
+      data: {
+        address: '0x2222222222222222222222222222222222222222',
+        amount: '10.001234',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_ERC20-test',
+        status: 'pending',
+      },
+    })
+    window.location.hash = '#usdt-erc20-payment'
+    window.sessionStorage.setItem(
+      'usdt-erc20-order',
+      JSON.stringify({
+        address: '0x2222222222222222222222222222222222222222',
+        amount: '10.001234',
+        expires_at: Date.now() / 1000 + 60,
+        order_id: 'USDT_ERC20-test',
+        status: 'pending',
+      })
+    )
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <USDTERC20PaymentDialog />
+      </I18nextProvider>
+    )
+
+    expect(await screen.findByText('USDT (ERC-20)')).toBeInTheDocument()
+    expect(
+      screen.getByText(/Отправляйте USDT только через сеть ERC-20/)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Платёж будет автоматически проверен после 12 подтверждений в сети Ethereum.'
+      )
+    ).toBeInTheDocument()
+    expect(getUSDTERC20PaymentOrder).toHaveBeenCalledWith('USDT_ERC20-test')
+    expect(getUSDTBEP20PaymentOrder).not.toHaveBeenCalled()
+    expect(getUSDTTRC20PaymentOrder).not.toHaveBeenCalled()
   })
 })

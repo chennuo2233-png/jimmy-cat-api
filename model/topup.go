@@ -51,6 +51,16 @@ type USDTTRC20PaymentReference struct {
 	ReservedUntil int64  `json:"reserved_until" gorm:"bigint;index"`
 }
 
+// USDTERC20PaymentReference keeps Ethereum address/amount reservations
+// independent from the same wallet's reservations on other networks.
+type USDTERC20PaymentReference struct {
+	Id            int    `json:"id"`
+	TopUpId       int    `json:"top_up_id" gorm:"uniqueIndex"`
+	Address       string `json:"address" gorm:"type:varchar(64);uniqueIndex:idx_usdt_erc20_reference"`
+	Amount        string `json:"amount" gorm:"type:varchar(32);uniqueIndex:idx_usdt_erc20_reference"`
+	ReservedUntil int64  `json:"reserved_until" gorm:"bigint;index"`
+}
+
 const (
 	PaymentMethodStripe       = "stripe"
 	PaymentMethodCreem        = "creem"
@@ -58,6 +68,7 @@ const (
 	PaymentMethodWaffoPancake = "waffo_pancake"
 	PaymentMethodUSDTBEP20    = "usdt_bep20"
 	PaymentMethodUSDTTRC20    = "usdt_trc20"
+	PaymentMethodUSDTERC20    = "usdt_erc20"
 	PaymentMethodBalance      = "balance"
 )
 
@@ -71,10 +82,11 @@ const (
 	PaymentProviderWaffoPancake = "waffo_pancake"
 	PaymentProviderUSDTBEP20    = "usdt_bep20"
 	PaymentProviderUSDTTRC20    = "usdt_trc20"
+	PaymentProviderUSDTERC20    = "usdt_erc20"
 	PaymentProviderBalance      = "balance"
 )
 
-var usdtOnchainPaymentProviders = []string{PaymentProviderUSDTBEP20, PaymentProviderUSDTTRC20}
+var usdtOnchainPaymentProviders = []string{PaymentProviderUSDTBEP20, PaymentProviderUSDTTRC20, PaymentProviderUSDTERC20}
 
 var (
 	ErrPaymentMethodMismatch    = errors.New("payment method mismatch")
@@ -85,6 +97,7 @@ var (
 	ErrWalletQuotaLimitExceeded = errors.New("wallet quota limit exceeded")
 	ErrUSDTBEP20AmountReserved  = errors.New("usdt bep20 payment amount is already reserved")
 	ErrUSDTTRC20AmountReserved  = errors.New("usdt trc20 payment amount is already reserved")
+	ErrUSDTERC20AmountReserved  = errors.New("usdt erc20 payment amount is already reserved")
 )
 
 func (topUp *TopUp) Insert() error {
@@ -130,6 +143,23 @@ func CreateUSDTTRC20TopUp(topUp *TopUp) error {
 	})
 }
 
+func CreateUSDTERC20TopUp(topUp *TopUp) error {
+	return createUSDTOnchainTopUp(topUp, PaymentProviderUSDTERC20, func(tx *gorm.DB, now int64) error {
+		return tx.Where("reserved_until <= ?", now).Delete(&USDTERC20PaymentReference{}).Error
+	}, func(tx *gorm.DB) error {
+		reference := &USDTERC20PaymentReference{
+			TopUpId:       topUp.Id,
+			Address:       topUp.PaymentAddress,
+			Amount:        topUp.PaymentAmount,
+			ReservedUntil: topUp.PaymentExpireAt + int64(2*time.Hour/time.Second),
+		}
+		if err := tx.Create(reference).Error; err != nil {
+			return ErrUSDTERC20AmountReserved
+		}
+		return nil
+	})
+}
+
 func createUSDTOnchainTopUp(topUp *TopUp, provider string, clearExpired func(*gorm.DB, int64) error, reserve func(*gorm.DB) error) error {
 	if topUp == nil || topUp.PaymentProvider != provider || topUp.PaymentAddress == "" || topUp.PaymentAmount == "" || topUp.PaymentExpireAt <= common.GetTimestamp() {
 		return ErrInvalidTopUpQuota
@@ -137,8 +167,8 @@ func createUSDTOnchainTopUp(topUp *TopUp, provider string, clearExpired func(*go
 
 	return DB.Transaction(func(tx *gorm.DB) error {
 		now := common.GetTimestamp()
-		// Lock the user row so simultaneous checkout requests across BSC and
-		// TRON cannot bypass the shared two-pending-order limit.
+		// Lock the user row so simultaneous checkout requests across BSC,
+		// TRON, and Ethereum cannot bypass the shared two-pending-order limit.
 		if err := lockForUpdate(tx).Where("id = ?", topUp.UserId).First(&User{}).Error; err != nil {
 			return err
 		}
@@ -280,6 +310,10 @@ func GetPendingUSDTTRC20TopUps() ([]TopUp, error) {
 	return getPendingUSDTOnchainTopUps(PaymentProviderUSDTTRC20)
 }
 
+func GetPendingUSDTERC20TopUps() ([]TopUp, error) {
+	return getPendingUSDTOnchainTopUps(PaymentProviderUSDTERC20)
+}
+
 func getPendingUSDTOnchainTopUps(provider string) ([]TopUp, error) {
 	var orders []TopUp
 	err := DB.Where(
@@ -301,6 +335,10 @@ func ExpireUSDTTRC20PendingTopUps() error {
 	return expireUSDTOnchainPendingTopUps(PaymentProviderUSDTTRC20)
 }
 
+func ExpireUSDTERC20PendingTopUps() error {
+	return expireUSDTOnchainPendingTopUps(PaymentProviderUSDTERC20)
+}
+
 func expireUSDTOnchainPendingTopUps(provider string) error {
 	return DB.Model(&TopUp{}).Where(
 		"payment_provider = ? AND status = ? AND payment_expire_at <= ?",
@@ -316,6 +354,10 @@ func GetUSDTBEP20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
 
 func GetUSDTTRC20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
 	return getUSDTOnchainTopUpForUser(tradeNo, userID, PaymentProviderUSDTTRC20)
+}
+
+func GetUSDTERC20TopUpForUser(tradeNo string, userID int) (*TopUp, error) {
+	return getUSDTOnchainTopUpForUser(tradeNo, userID, PaymentProviderUSDTERC20)
 }
 
 func getUSDTOnchainTopUpForUser(tradeNo string, userID int, provider string) (*TopUp, error) {
@@ -352,6 +394,10 @@ func CompleteUSDTBEP20TopUp(tradeNo, txHash string) (bool, error) {
 
 func CompleteUSDTTRC20TopUp(tradeNo, txHash string) (bool, error) {
 	return completeUSDTOnchainTopUp(tradeNo, txHash, PaymentProviderUSDTTRC20, "USDT TRC-20", "usdt trc20 topup")
+}
+
+func CompleteUSDTERC20TopUp(tradeNo, txHash string) (bool, error) {
+	return completeUSDTOnchainTopUp(tradeNo, txHash, PaymentProviderUSDTERC20, "USDT ERC-20", "usdt erc20 topup")
 }
 
 func completeUSDTOnchainTopUp(tradeNo, txHash, provider, displayName, cacheReason string) (bool, error) {

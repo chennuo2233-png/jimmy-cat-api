@@ -28,6 +28,7 @@ func TestCreateUSDTOnchainTopUpSharesPendingOrderLimitAcrossNetworks(t *testing.
 		&TopUp{},
 		&USDTBEP20PaymentReference{},
 		&USDTTRC20PaymentReference{},
+		&USDTERC20PaymentReference{},
 	))
 	sqlDB, err := db.DB()
 	require.NoError(t, err)
@@ -52,15 +53,15 @@ func TestCreateUSDTOnchainTopUpSharesPendingOrderLimitAcrossNetworks(t *testing.
 			PaymentAmount: "10.001002", PaymentExpireAt: now + 1800, CreateTime: now + 1, Status: common.TopUpStatusPending,
 		},
 		{
-			UserId: user.Id, TradeNo: "TRC20-third", PaymentMethod: PaymentMethodUSDTTRC20,
-			PaymentProvider: PaymentProviderUSDTTRC20, PaymentAddress: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+			UserId: user.Id, TradeNo: "ERC20-third", PaymentMethod: PaymentMethodUSDTERC20,
+			PaymentProvider: PaymentProviderUSDTERC20, PaymentAddress: "0x2222222222222222222222222222222222222222",
 			PaymentAmount: "10.001003", PaymentExpireAt: now + 1800, CreateTime: now + 2, Status: common.TopUpStatusPending,
 		},
 	}
 
 	require.NoError(t, CreateUSDTBEP20TopUp(orders[0]))
 	require.NoError(t, CreateUSDTTRC20TopUp(orders[1]))
-	require.NoError(t, CreateUSDTTRC20TopUp(orders[2]))
+	require.NoError(t, CreateUSDTERC20TopUp(orders[2]))
 
 	var stored []TopUp
 	require.NoError(t, db.Order("create_time ASC").Find(&stored).Error)

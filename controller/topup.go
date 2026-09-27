@@ -92,6 +92,24 @@ func GetTopUpInfo(c *gin.Context) {
 			})
 		}
 	}
+	enableUSDTERC20 := complianceConfirmed && strings.TrimSpace(setting.USDTERC20RPCURL) != "" && strings.TrimSpace(setting.USDTERC20Addresses) != ""
+	if enableUSDTERC20 {
+		hasUSDTERC20 := false
+		for _, method := range payMethods {
+			if method["type"] == model.PaymentMethodUSDTERC20 {
+				hasUSDTERC20 = true
+				break
+			}
+		}
+		if !hasUSDTERC20 {
+			payMethods = append(payMethods, map[string]string{
+				"name":      "USDT (ERC-20)",
+				"type":      model.PaymentMethodUSDTERC20,
+				"color":     "#627EEA",
+				"min_topup": strconv.Itoa(int(getMinTopup())),
+			})
+		}
+	}
 	if enableWaffoPancake {
 		hasWaffoPancake := false
 		for _, method := range payMethods {
@@ -141,6 +159,7 @@ func GetTopUpInfo(c *gin.Context) {
 		"enable_waffo_pancake_topup":       enableWaffoPancake,
 		"enable_usdt_bep20_topup":          enableUSDTBEP20,
 		"enable_usdt_trc20_topup":          enableUSDTTRC20,
+		"enable_usdt_erc20_topup":          enableUSDTERC20,
 		"enable_redemption":                complianceConfirmed,
 		"payment_compliance_confirmed":     complianceConfirmed,
 		"payment_compliance_terms_version": operation_setting.CurrentComplianceTermsVersion,

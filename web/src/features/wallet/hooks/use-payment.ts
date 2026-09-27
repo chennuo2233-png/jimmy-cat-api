@@ -29,6 +29,7 @@ import {
   requestStripePayment,
   requestUSDTBEP20Payment,
   requestUSDTTRC20Payment,
+  requestUSDTERC20Payment,
   isApiSuccess,
 } from '../api'
 import {
@@ -37,9 +38,11 @@ import {
   isWaffoPancakePayment,
   isUSDTBEP20Payment,
   isUSDTTRC20Payment,
+  isUSDTERC20Payment,
   submitPaymentForm,
   USDT_BEP20_ORDER_CREATED_EVENT,
   USDT_TRC20_ORDER_CREATED_EVENT,
+  USDT_ERC20_ORDER_CREATED_EVENT,
 } from '../lib'
 import type { AmountRequest, AmountResponse } from '../types'
 
@@ -120,14 +123,20 @@ export function usePayment() {
         const isStripe = isStripePayment(paymentType)
         const isUSDTBEP20 = isUSDTBEP20Payment(paymentType)
         const isUSDTTRC20 = isUSDTTRC20Payment(paymentType)
+        const isUSDTERC20 = isUSDTERC20Payment(paymentType)
         const amount = Math.floor(topupAmount)
 
-        if (isUSDTBEP20 || isUSDTTRC20) {
+        if (isUSDTBEP20 || isUSDTTRC20 || isUSDTERC20) {
           let response
           let storageKey
           let paymentHash
           let createdEvent
-          if (isUSDTTRC20) {
+          if (isUSDTERC20) {
+            response = await requestUSDTERC20Payment(amount)
+            storageKey = 'usdt-erc20-order'
+            paymentHash = 'usdt-erc20-payment'
+            createdEvent = USDT_ERC20_ORDER_CREATED_EVENT
+          } else if (isUSDTTRC20) {
             response = await requestUSDTTRC20Payment(amount)
             storageKey = 'usdt-trc20-order'
             paymentHash = 'usdt-trc20-payment'

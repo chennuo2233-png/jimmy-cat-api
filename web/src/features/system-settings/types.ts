@@ -304,6 +304,8 @@ export type BillingSettings = {
   USDTTRC20RPCURL: string
   USDTTRC20SolidityURL: string
   USDTTRC20Addresses: string
+  USDTERC20RPCURL: string
+  USDTERC20Addresses: string
   StripeApiSecret: string
   StripeWebhookSecret: string
   StripePriceId: string

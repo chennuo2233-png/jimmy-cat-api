@@ -68,6 +68,15 @@ export async function saveUSDTTRC20Config(request: {
   return res.data
 }
 
+export async function saveUSDTERC20Config(request: {
+  password: string
+  rpc_url: string
+  addresses: string[]
+}) {
+  const res = await api.post('/api/option/usdt-erc20/save', request)
+  return res.data
+}
+
 export async function startLogCleanupTask(targetTimestamp: number) {
   const res = await api.post<SystemTaskResponse<LogCleanupTask>>(
     '/api/system-task/log-cleanup',

@@ -23,6 +23,7 @@ const (
 	SystemTaskTypeAsyncTaskPoll  = "async_task_poll"
 	SystemTaskTypeUSDTBEP20Scan  = "usdt_bep20_scan"
 	SystemTaskTypeUSDTTRC20Scan  = "usdt_trc20_scan"
+	SystemTaskTypeUSDTERC20Scan  = "usdt_erc20_scan"
 )
 
 var ErrSystemTaskLockLost = errors.New("system task lock lost")

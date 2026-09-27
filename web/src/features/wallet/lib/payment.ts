@@ -26,6 +26,7 @@ import type { PaymentMethod, PresetAmount, TopupInfo } from '../types'
 
 export const USDT_BEP20_ORDER_CREATED_EVENT = 'usdt-bep20-order-created'
 export const USDT_TRC20_ORDER_CREATED_EVENT = 'usdt-trc20-order-created'
+export const USDT_ERC20_ORDER_CREATED_EVENT = 'usdt-erc20-order-created'
 
 // ============================================================================
 // Payment Processing Functions
@@ -102,6 +103,10 @@ export function isUSDTBEP20Payment(paymentType: string): boolean {
 
 export function isUSDTTRC20Payment(paymentType: string): boolean {
   return paymentType === PAYMENT_TYPES.USDT_TRC20
+}
+
+export function isUSDTERC20Payment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.USDT_ERC20
 }
 
 export interface PaymentProcessors {

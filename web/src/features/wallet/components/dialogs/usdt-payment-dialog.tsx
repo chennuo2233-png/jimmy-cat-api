@@ -49,7 +49,7 @@ type USDTNetworkPaymentDialogProps = {
   paymentHash: string
   storageKey: string
   title: string
-  network: 'BEP-20' | 'TRC-20'
+  network: 'BEP-20' | 'TRC-20' | 'ERC-20'
 }
 
 export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
@@ -190,6 +190,12 @@ export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
                       'Wallet or payment service fees may apply. Send enough USDT so our address receives the exact amount shown below.'
                     )}
                   </p>
+                  <p className='mt-2 text-sm leading-5 font-semibold'>
+                    {t(
+                      'Only send USDT over the {{network}} network. Transfers from other networks cannot be credited automatically.',
+                      { network: props.network }
+                    )}
+                  </p>
                   <details className='mt-2 text-sm'>
                     <summary className='cursor-pointer font-semibold underline underline-offset-2'>
                       {t('Transfer issue or refund?')}
@@ -239,13 +245,18 @@ export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
                   {t('Order expires in {{time}}', { time: countdown })}
                 </p>
                 <p className='text-muted-foreground text-center text-sm'>
-                  {props.network === 'BEP-20'
-                    ? t(
-                        'Payment is checked automatically after 12 BSC confirmations.'
-                      )
-                    : t(
-                        'Payment is checked automatically after TRON finalization.'
-                      )}
+                  {props.network === 'BEP-20' &&
+                    t(
+                      'Payment is checked automatically after 12 BSC confirmations.'
+                    )}
+                  {props.network === 'TRC-20' &&
+                    t(
+                      'Payment is checked automatically after TRON finalization.'
+                    )}
+                  {props.network === 'ERC-20' &&
+                    t(
+                      'Payment is checked automatically after 12 Ethereum confirmations.'
+                    )}
                 </p>
                 {checking && (
                   <Loader2 className='text-muted-foreground mx-auto size-4 animate-spin' />

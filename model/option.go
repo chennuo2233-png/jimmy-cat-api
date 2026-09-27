@@ -121,6 +121,8 @@ func InitOptionMap() {
 	common.OptionMap["USDTTRC20RPCURL"] = setting.USDTTRC20RPCURL
 	common.OptionMap["USDTTRC20SolidityURL"] = setting.USDTTRC20SolidityURL
 	common.OptionMap["USDTTRC20Addresses"] = setting.USDTTRC20Addresses
+	common.OptionMap["USDTERC20RPCURL"] = setting.USDTERC20RPCURL
+	common.OptionMap["USDTERC20Addresses"] = setting.USDTERC20Addresses
 	common.OptionMap["TopupGroupRatio"] = common.TopupGroupRatio2JSONString()
 	common.OptionMap["Chats"] = setting.Chats2JsonString()
 	common.OptionMap["AutoGroups"] = setting.AutoGroups2JsonString()
@@ -509,6 +511,10 @@ func updateOptionMap(key string, value string) (err error) {
 		setting.USDTTRC20SolidityURL = value
 	case "USDTTRC20Addresses":
 		setting.USDTTRC20Addresses = value
+	case "USDTERC20RPCURL":
+		setting.USDTERC20RPCURL = value
+	case "USDTERC20Addresses":
+		setting.USDTERC20Addresses = value
 	case "WaffoPancakeUnitPrice":
 		setting.WaffoPancakeUnitPrice, _ = strconv.ParseFloat(value, 64)
 	case "WaffoPancakeMinTopUp":

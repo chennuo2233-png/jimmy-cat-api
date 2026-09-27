@@ -52,6 +52,7 @@ import {
   confirmPaymentCompliance,
   saveUSDTBEP20Config,
   saveUSDTTRC20Config,
+  saveUSDTERC20Config,
 } from '../api'
 import {
   SettingsForm,
@@ -218,6 +219,7 @@ type PaymentSettingsSectionProps = {
   waffoPancakeProvisionedProductID?: string
   usdtDefaultValues: USDTBEP20SettingsValues
   usdtTRC20DefaultValues: USDTTRC20SettingsValues
+  usdtERC20DefaultValues: USDTBEP20SettingsValues
   complianceDefaults: PaymentComplianceDefaults
 }
 
@@ -238,6 +240,7 @@ export function PaymentSettingsSection({
   waffoPancakeProvisionedProductID,
   usdtDefaultValues,
   usdtTRC20DefaultValues,
+  usdtERC20DefaultValues,
   complianceDefaults,
 }: PaymentSettingsSectionProps) {
   const { t } = useTranslation()
@@ -260,6 +263,14 @@ export function PaymentSettingsSection({
   )
   const [usdtTRC20Password, setUSDTTRC20Password] = React.useState('')
   const [savingUSDTTRC20, setSavingUSDTTRC20] = React.useState(false)
+  const [usdtERC20RPCURL, setUSDTERC20RPCURL] = React.useState(
+    usdtERC20DefaultValues.rpcURL
+  )
+  const [usdtERC20Addresses, setUSDTERC20Addresses] = React.useState(
+    usdtERC20DefaultValues.addresses
+  )
+  const [usdtERC20Password, setUSDTERC20Password] = React.useState('')
+  const [savingUSDTERC20, setSavingUSDTERC20] = React.useState(false)
   const queryClient = useQueryClient()
   const updateOption = useUpdateOption()
 
@@ -276,6 +287,10 @@ export function PaymentSettingsSection({
     usdtTRC20DefaultValues.rpcURL,
     usdtTRC20DefaultValues.solidityURL,
   ])
+  React.useEffect(() => {
+    setUSDTERC20RPCURL(usdtERC20DefaultValues.rpcURL)
+    setUSDTERC20Addresses(usdtERC20DefaultValues.addresses)
+  }, [usdtERC20DefaultValues.addresses, usdtERC20DefaultValues.rpcURL])
   const initialFormValues = React.useMemo<PaymentFormValues>(
     () => ({
       ...defaultValues,
@@ -929,7 +944,7 @@ export function PaymentSettingsSection({
           />
           <Tabs defaultValue='general' className='min-w-0'>
             <div className='overflow-x-auto pb-1'>
-              <TabsList className='grid min-w-[60rem] grid-cols-8'>
+              <TabsList className='grid min-w-[68rem] grid-cols-9'>
                 <TabsTrigger value='general'>{t('General')}</TabsTrigger>
                 <TabsTrigger value='epay'>Epay</TabsTrigger>
                 <TabsTrigger value='stripe'>{t('Stripe')}</TabsTrigger>
@@ -938,6 +953,7 @@ export function PaymentSettingsSection({
                 <TabsTrigger value='waffo'>Waffo</TabsTrigger>
                 <TabsTrigger value='usdt-bep20'>USDT BEP-20</TabsTrigger>
                 <TabsTrigger value='usdt-trc20'>USDT TRC-20</TabsTrigger>
+                <TabsTrigger value='usdt-erc20'>USDT ERC-20</TabsTrigger>
               </TabsList>
             </div>
 
@@ -1863,6 +1879,96 @@ export function PaymentSettingsSection({
                   }}
                 >
                   {savingUSDTTRC20 && (
+                    <Loader2 className='mr-2 size-4 animate-spin' />
+                  )}
+                  {t('Save')}
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent
+              value='usdt-erc20'
+              className={paymentTabContentClassName}
+            >
+              <div className='space-y-4'>
+                <FormItem>
+                  <FormLabel>{t('Ethereum JSON-RPC URL')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtERC20RPCURL}
+                    onChange={(event) => setUSDTERC20RPCURL(event.target.value)}
+                    placeholder='https://rpc.ankr.com/eth/...'
+                    autoComplete='off'
+                  />
+                  <FormDescription>
+                    {t('Used to discover incoming ERC-20 transfers.')}
+                  </FormDescription>
+                </FormItem>
+                <FormItem>
+                  <FormLabel>
+                    {t('Receiving Ethereum wallet addresses')}
+                  </FormLabel>
+                  <Input
+                    value={usdtERC20Addresses}
+                    onChange={(event) =>
+                      setUSDTERC20Addresses(event.target.value)
+                    }
+                    placeholder='0x..., 0x...'
+                    autoComplete='off'
+                  />
+                </FormItem>
+                <FormItem>
+                  <FormLabel>{t('Current password')}</FormLabel>
+                  <Input
+                    type='password'
+                    value={usdtERC20Password}
+                    onChange={(event) =>
+                      setUSDTERC20Password(event.target.value)
+                    }
+                    autoComplete='current-password'
+                  />
+                </FormItem>
+                <Button
+                  type='button'
+                  disabled={
+                    savingUSDTERC20 ||
+                    !usdtERC20Password ||
+                    !usdtERC20RPCURL ||
+                    !usdtERC20Addresses
+                  }
+                  onClick={async () => {
+                    setSavingUSDTERC20(true)
+                    try {
+                      const result = await saveUSDTERC20Config({
+                        password: usdtERC20Password,
+                        rpc_url: usdtERC20RPCURL,
+                        addresses: usdtERC20Addresses
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean),
+                      })
+                      if (result.success) {
+                        toast.success(t('USDT ERC-20 settings saved'))
+                        setUSDTERC20Password('')
+                        await queryClient.invalidateQueries({
+                          queryKey: ['system-options'],
+                        })
+                      } else {
+                        toast.error(
+                          result.message || t('Failed to save settings')
+                        )
+                      }
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : t('Failed to save settings')
+                      )
+                    } finally {
+                      setSavingUSDTERC20(false)
+                    }
+                  }}
+                >
+                  {savingUSDTERC20 && (
                     <Loader2 className='mr-2 size-4 animate-spin' />
                   )}
                   {t('Save')}

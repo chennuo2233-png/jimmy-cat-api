@@ -30,6 +30,7 @@ import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
 import { PaymentConfirmDialog } from './components/dialogs/payment-confirm-dialog'
 import { TransferDialog } from './components/dialogs/transfer-dialog'
 import { USDTBEP20PaymentDialog } from './components/dialogs/usdt-bep20-payment-dialog'
+import { USDTERC20PaymentDialog } from './components/dialogs/usdt-erc20-payment-dialog'
 import { USDTTRC20PaymentDialog } from './components/dialogs/usdt-trc20-payment-dialog'
 import { RechargeFormCard } from './components/recharge-form-card'
 import { SubscriptionPlansCard } from './components/subscription-plans-card'
@@ -388,6 +389,7 @@ export function Wallet(props: WalletProps) {
       />
       <USDTBEP20PaymentDialog />
       <USDTTRC20PaymentDialog />
+      <USDTERC20PaymentDialog />
     </>
   )
 }

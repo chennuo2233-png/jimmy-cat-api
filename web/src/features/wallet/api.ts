@@ -213,6 +213,18 @@ export async function getUSDTTRC20PaymentOrder(orderId: string) {
   return res.data
 }
 
+export async function requestUSDTERC20Payment(amount: number) {
+  const res = await api.post('/api/user/usdt-erc20/pay', { amount })
+  return res.data
+}
+
+export async function getUSDTERC20PaymentOrder(orderId: string) {
+  const res = await api.get(
+    `/api/user/usdt-erc20/order/${encodeURIComponent(orderId)}`
+  )
+  return res.data
+}
+
 /**
  * Get affiliate code
  */
