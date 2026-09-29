@@ -32,6 +32,28 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type RegisterRequest struct {
+	Username         string `json:"username"`
+	Password         string `json:"password"`
+	Email            string `json:"email"`
+	VerificationCode string `json:"verification_code"`
+	AffCode          string `json:"aff_code"`
+	Language         string `json:"language"`
+}
+
+func normalizeRegistrationLanguage(language string) string {
+	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(language), "_", "-")) {
+	case "en", "fr", "ja", "ru", "vi":
+		return strings.ToLower(strings.TrimSpace(language))
+	case "zh", "zh-cn", "zh-hans", "zhcn":
+		return "zhCN"
+	case "zh-tw", "zh-hk", "zh-mo", "zh-hant", "zhtw":
+		return "zhTW"
+	default:
+		return "ru"
+	}
+}
+
 var (
 	errUserPasswordUnset    = errors.New("user password is not set")
 	errOriginalPasswordFail = errors.New("original password is incorrect")
@@ -212,11 +234,18 @@ func Register(c *gin.Context) {
 		common.ApiErrorI18n(c, i18n.MsgUserPasswordRegisterDisabled)
 		return
 	}
-	var user model.User
-	err := common.DecodeJson(c.Request.Body, &user)
+	var request RegisterRequest
+	err := common.DecodeJson(c.Request.Body, &request)
 	if err != nil {
 		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
+	}
+	user := model.User{
+		Username:         request.Username,
+		Password:         request.Password,
+		Email:            request.Email,
+		VerificationCode: request.VerificationCode,
+		AffCode:          request.AffCode,
 	}
 	user.Username = strings.TrimSpace(user.Username)
 	user.Email = model.NormalizeEmail(user.Email)
@@ -269,6 +298,9 @@ func Register(c *gin.Context) {
 		InviterId:   inviterId,
 		Role:        common.RoleCommonUser, // 明确设置角色为普通用户
 	}
+	cleanUser.SetSetting(dto.UserSetting{
+		Language: normalizeRegistrationLanguage(request.Language),
+	})
 	if common.EmailVerificationEnabled {
 		cleanUser.Email = user.Email
 	}

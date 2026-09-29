@@ -32,6 +32,7 @@ await i18n.use(initReactI18next).init({
   fallbackLng: 'ru',
   resources: {
     en: { translation: {} },
+    zhCN: { translation: {} },
     ru: {
       translation: {
         'Choose your language': 'Выберите язык',
@@ -84,6 +85,18 @@ describe('FirstVisitLanguageDialog', () => {
       .click(screen.getByRole('button', { name: /English/ }))
 
     await waitFor(() => expect(i18n.language).toBe('en'))
+    expect(window.localStorage.getItem('language_welcome_seen_v1')).toBe('true')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('offers Chinese and switches the interface to Chinese', async () => {
+    renderDialog()
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: /简体中文/ }))
+
+    await waitFor(() => expect(i18n.language).toBe('zhCN'))
     expect(window.localStorage.getItem('language_welcome_seen_v1')).toBe('true')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

@@ -37,6 +37,7 @@ const preferredLanguages = [
     label: 'Tiếng Việt',
     detailKey: 'Vietnamese interface',
   },
+  { code: 'zhCN', flag: '🇨🇳', label: '简体中文', detailKey: 'Chinese' },
 ] as const
 
 function hasSeenLanguagePrompt(): boolean {
