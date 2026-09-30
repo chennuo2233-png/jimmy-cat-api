@@ -26,8 +26,6 @@ import {
   LoadingSkeleton,
   EmptyState,
   SearchBar,
-  PricingTable,
-  PricingSidebar,
   PricingToolbar,
   ModelCardGrid,
   ModelDetailsDrawer,
@@ -35,6 +33,7 @@ import {
 import { EXCLUDED_GROUPS, VIEW_MODES } from './constants'
 import { useFilters } from './hooks/use-filters'
 import { usePricingData } from './hooks/use-pricing-data'
+import { consolidatePricingModels } from './lib/catalog'
 
 export function Pricing() {
   const { t } = useTranslation()
@@ -54,6 +53,19 @@ export function Pricing() {
     usdExchangeRate,
   } = usePricingData()
 
+  const catalogModels = useMemo(
+    () => consolidatePricingModels(models || []),
+    [models]
+  )
+  const callableIdCount = useMemo(
+    () =>
+      catalogModels.reduce(
+        (count, model) => count + 1 + (model.aliases?.length || 0),
+        0
+      ),
+    [catalogModels]
+  )
+
   const {
     searchInput,
     sortBy,
@@ -63,7 +75,6 @@ export function Pricing() {
     endpointTypeFilter,
     tagFilter,
     tokenUnit,
-    viewMode,
     showRechargePrice,
     setSearchInput,
     setSortBy,
@@ -73,7 +84,6 @@ export function Pricing() {
     setEndpointTypeFilter,
     setTagFilter,
     setTokenUnit,
-    setViewMode,
     setShowRechargePrice,
     filteredModels,
     hasActiveFilters,
@@ -81,7 +91,7 @@ export function Pricing() {
     availableTags,
     clearFilters,
     clearSearch,
-  } = useFilters(models || [])
+  } = useFilters(catalogModels)
 
   const handleModelClick = useCallback((modelName: string) => {
     setSelectedModelName(modelName)
@@ -90,11 +100,11 @@ export function Pricing() {
   const selectedModel = useMemo(
     () =>
       selectedModelName
-        ? (models || []).find(
+        ? catalogModels.find(
             (model) => model.model_name === selectedModelName
           ) || null
         : null,
-    [models, selectedModelName]
+    [catalogModels, selectedModelName]
   )
 
   const availableGroups = useMemo(
@@ -121,29 +131,17 @@ export function Pricing() {
       )
     }
 
-    if (viewMode === VIEW_MODES.CARD) {
-      return (
-        <ModelCardGrid
-          models={filteredModels}
-          onModelClick={handleModelClick}
-          priceRate={priceRate}
-          usdExchangeRate={usdExchangeRate}
-          tokenUnit={tokenUnit}
-          showRechargePrice={showRechargePrice}
-          selectedGroup={groupFilter}
-        />
-      )
-    }
-
     return (
-      <PricingTable
+      <ModelCardGrid
         models={filteredModels}
+        onModelClick={handleModelClick}
         priceRate={priceRate}
         usdExchangeRate={usdExchangeRate}
         tokenUnit={tokenUnit}
         showRechargePrice={showRechargePrice}
         selectedGroup={groupFilter}
-        onModelClick={handleModelClick}
+        groupRatio={groupRatio}
+        usableGroup={usableGroup}
       />
     )
   }
@@ -152,7 +150,7 @@ export function Pricing() {
     return (
       <PublicLayout showMainContainer={false}>
         <div className='mx-auto w-full max-w-[1800px] px-3 pt-16 pb-8 sm:px-6 sm:pt-20 sm:pb-10 xl:px-8'>
-          <LoadingSkeleton viewMode={viewMode} />
+          <LoadingSkeleton viewMode={VIEW_MODES.CARD} />
         </div>
       </PublicLayout>
     )
@@ -166,9 +164,9 @@ export function Pricing() {
           className='pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-20 dark:opacity-[0.10]'
           style={{
             background: [
-              'radial-gradient(ellipse 60% 50% at 20% 20%, oklch(0.72 0.18 250 / 80%) 0%, transparent 70%)',
-              'radial-gradient(ellipse 50% 40% at 80% 15%, oklch(0.65 0.15 200 / 60%) 0%, transparent 70%)',
-              'radial-gradient(ellipse 40% 35% at 50% 70%, oklch(0.70 0.12 280 / 40%) 0%, transparent 70%)',
+              'radial-gradient(ellipse 60% 50% at 20% 20%, rgba(251, 191, 36, 0.22) 0%, transparent 70%)',
+              'radial-gradient(ellipse 50% 40% at 80% 15%, rgba(217, 119, 6, 0.16) 0%, transparent 70%)',
+              'radial-gradient(ellipse 40% 35% at 50% 70%, rgba(245, 158, 11, 0.10) 0%, transparent 70%)',
             ].join(', '),
             maskImage:
               'linear-gradient(to bottom, black 40%, transparent 100%)',
@@ -182,13 +180,17 @@ export function Pricing() {
               {t('Model Square')}
             </h1>
             <p className='text-muted-foreground/80 mt-3 text-sm sm:mt-4 sm:text-base'>
-              {t('This site currently has {{count}} models enabled', {
-                count: models?.length || 0,
-              })}
+              {t(
+                'Explore {{count}} unique models and {{ids}} callable model IDs',
+                {
+                  count: catalogModels.length,
+                  ids: callableIdCount,
+                }
+              )}
             </p>
             <p className='text-muted-foreground/60 mx-auto mt-2 max-w-2xl text-xs leading-relaxed sm:text-sm'>
               {t(
-                'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
+                'Compare the official or base price with every available group price. AGAM aliases are merged into the same model.'
               )}
             </p>
             <SearchBar
@@ -196,46 +198,23 @@ export function Pricing() {
               onChange={setSearchInput}
               onClear={clearSearch}
               placeholder={t(
-                'Search model name, provider, endpoint, or tag...'
+                'Search model name, alias, provider, endpoint, or tag...'
               )}
               className='mx-auto mt-4 max-w-2xl sm:mt-6'
             />
           </header>
 
-          <div className='grid gap-4 xl:grid-cols-[330px_minmax(0,1fr)]'>
-            <PricingSidebar
-              quotaTypeFilter={quotaTypeFilter}
-              endpointTypeFilter={endpointTypeFilter}
-              vendorFilter={vendorFilter}
-              groupFilter={groupFilter}
-              tagFilter={tagFilter}
-              onQuotaTypeChange={setQuotaTypeFilter}
-              onEndpointTypeChange={setEndpointTypeFilter}
-              onVendorChange={setVendorFilter}
-              onGroupChange={setGroupFilter}
-              onTagChange={setTagFilter}
-              vendors={vendors || []}
-              groups={availableGroups}
-              groupRatios={groupRatio}
-              tags={availableTags}
-              models={models || []}
-              hasActiveFilters={hasActiveFilters}
-              onClearFilters={clearFilters}
-              className='hover-scrollbar sticky top-4 hidden max-h-[calc(100dvh-2rem)] self-start overflow-y-auto xl:block'
-            />
-
+          <div>
             <main className='min-w-0 space-y-4'>
               <PricingToolbar
                 filteredCount={filteredModels.length}
-                totalCount={models?.length}
+                totalCount={catalogModels.length}
                 sortBy={sortBy}
                 onSortChange={setSortBy}
                 tokenUnit={tokenUnit}
                 onTokenUnitChange={setTokenUnit}
                 showRechargePrice={showRechargePrice}
                 onRechargePriceChange={setShowRechargePrice}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
                 quotaTypeFilter={quotaTypeFilter}
                 endpointTypeFilter={endpointTypeFilter}
                 vendorFilter={vendorFilter}
@@ -250,7 +229,7 @@ export function Pricing() {
                 groups={availableGroups}
                 groupRatios={groupRatio}
                 tags={availableTags}
-                models={models || []}
+                models={catalogModels}
                 hasActiveFilters={hasActiveFilters}
                 activeFilterCount={activeFilterCount}
                 onClearFilters={clearFilters}

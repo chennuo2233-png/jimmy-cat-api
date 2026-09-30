@@ -5495,5 +5495,18 @@
   "docs.errors.429": "已达到速率或并发限制。请减少并行请求，并使用指数退避重试。",
   "docs.errors.clientGone": "客户端、浏览器、代理或网络在流式响应完成前断开连接。请延长超时、保持流式模式，并在稳定网络下重试。",
   "docs.support.title": "仍未解决？",
-  "docs.support.description": "请向客服提供请求 ID、时间、端点、模型和错误文本。切勿发送完整 API 密钥。"
+  "docs.support.description": "请向客服提供请求 ID、时间、端点、模型和错误文本。切勿发送完整 API 密钥。",
+  "Cache read": "缓存读取",
+  "This model uses a custom billing expression. Open details for the complete pricing rules.": "此模型使用自定义计费表达式，请打开详情查看完整计费规则。",
+  "Price per {{unit}} tokens": "每 {{unit}} Token 的价格",
+  "Charged per request": "按次计费",
+  "Also callable as": "也可使用以下名称调用",
+  "Copy model ID": "复制模型 ID",
+  "Copy ID": "复制 ID",
+  "Official / base price": "官方 / 基础价格",
+  "Price before group multipliers. Custom models use this as the reference price.": "分组倍率生效前的价格；自定义模型以此作为参考价。",
+  "Explore {{count}} unique models and {{ids}} callable model IDs": "探索 {{count}} 个真实模型与 {{ids}} 个可调用模型 ID",
+  "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "对比官方或基础价格与各可用分组的实际价格；AGAM 别名已合并到同一模型。",
+  "Search model name, alias, provider, endpoint, or tag...": "搜索模型名称、别名、供应商、端点或标签……",
+  "Alias": "别名"
 }

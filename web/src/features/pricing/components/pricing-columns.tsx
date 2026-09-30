@@ -83,11 +83,18 @@ export function usePricingColumns(
         const modelIcon = modelIconKey ? getLobeIcon(modelIconKey, 14) : null
 
         return (
-          <div className='flex max-w-full min-w-0 items-center gap-2'>
+          <div className='flex max-w-full min-w-0 items-start gap-2'>
             {modelIcon}
-            <span className='truncate font-mono text-sm font-medium'>
-              {model.model_name}
-            </span>
+            <div className='min-w-0'>
+              <span className='block truncate font-mono text-sm font-medium'>
+                {model.model_name}
+              </span>
+              {(model.aliases?.length || 0) > 0 && (
+                <span className='text-muted-foreground mt-0.5 block truncate font-mono text-[10px]'>
+                  {t('Alias')}: {model.aliases?.join(', ')}
+                </span>
+              )}
+            </div>
           </div>
         )
       },

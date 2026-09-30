@@ -5495,5 +5495,18 @@
   "docs.errors.429": "Достигнут лимит частоты или параллельных запросов. Уменьшите число одновременных запросов и повторяйте с экспоненциальной задержкой.",
   "docs.errors.clientGone": "Клиент, браузер, прокси или сеть закрыли поток до завершения. Увеличьте тайм-ауты, оставьте потоковый режим включённым и повторите запрос в стабильной сети.",
   "docs.support.title": "Проблема осталась?",
-  "docs.support.description": "Отправьте поддержке Request ID, время, эндпоинт, модель и текст ошибки. Никогда не отправляйте полный API-ключ."
+  "docs.support.description": "Отправьте поддержке Request ID, время, эндпоинт, модель и текст ошибки. Никогда не отправляйте полный API-ключ.",
+  "Cache read": "Чтение кэша",
+  "This model uses a custom billing expression. Open details for the complete pricing rules.": "Для этой модели используется особая формула тарификации. Откройте подробности, чтобы увидеть все правила расчёта.",
+  "Price per {{unit}} tokens": "Цена за {{unit}} токенов",
+  "Charged per request": "Оплата за запрос",
+  "Also callable as": "Также доступна под именем",
+  "Copy model ID": "Скопировать ID модели",
+  "Copy ID": "Скопировать ID",
+  "Official / base price": "Официальная / базовая цена",
+  "Price before group multipliers. Custom models use this as the reference price.": "Цена до применения коэффициента группы. Для пользовательских моделей это справочная цена.",
+  "Explore {{count}} unique models and {{ids}} callable model IDs": "{{count}} уникальных моделей и {{ids}} доступных ID для вызова",
+  "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Сравните официальную или базовую цену с фактической ценой каждой доступной группы. Псевдонимы AGAM объединены с соответствующей моделью.",
+  "Search model name, alias, provider, endpoint, or tag...": "Поиск по названию, псевдониму, поставщику, эндпоинту или тегу…",
+  "Alias": "Псевдоним"
 }

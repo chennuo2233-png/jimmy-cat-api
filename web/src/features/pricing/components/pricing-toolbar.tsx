@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ArrowUpDown, Check, Filter, Grid2X2, Table2 } from 'lucide-react'
+import { ArrowUpDown, Check, Filter } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -47,12 +47,7 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
-import {
-  VIEW_MODES,
-  getSortLabels,
-  type SortOption,
-  type ViewMode,
-} from '../constants'
+import { getSortLabels, type SortOption } from '../constants'
 import type { PricingModel, PricingVendor, TokenUnit } from '../types'
 import { PricingSidebar } from './pricing-sidebar'
 
@@ -72,8 +67,6 @@ export interface PricingToolbarProps {
   onTokenUnitChange: (value: TokenUnit) => void
   showRechargePrice: boolean
   onRechargePriceChange: (value: boolean) => void
-  viewMode: ViewMode
-  onViewModeChange: (value: ViewMode) => void
   quotaTypeFilter: string
   endpointTypeFilter: string
   vendorFilter: string
@@ -134,7 +127,7 @@ function SegmentedControl(props: {
 
         return (
           <Tooltip key={option.value}>
-            <TooltipTrigger render={button}></TooltipTrigger>
+            <TooltipTrigger render={button} />
             <TooltipContent side='bottom' className='text-xs'>
               {option.tooltip}
             </TooltipContent>
@@ -155,11 +148,6 @@ export function PricingToolbar(props: PricingToolbarProps) {
     [props]
   )
 
-  const handleViewModeChange = useCallback(
-    (value: string) => props.onViewModeChange(value as ViewMode),
-    [props]
-  )
-
   const handleRechargePriceChange = useCallback(
     (value: string) => props.onRechargePriceChange(value === 'recharge'),
     [props]
@@ -174,7 +162,7 @@ export function PricingToolbar(props: PricingToolbarProps) {
             variant='outline'
             size='sm'
             onClick={() => setMobileFiltersOpen(true)}
-            className='gap-1.5 xl:hidden'
+            className='gap-1.5'
           >
             <Filter className='size-4' />
             {t('Filter')}
@@ -252,24 +240,6 @@ export function PricingToolbar(props: PricingToolbarProps) {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <SegmentedControl
-            options={[
-              {
-                value: VIEW_MODES.CARD,
-                icon: Grid2X2,
-                tooltip: t('Card view'),
-              },
-              {
-                value: VIEW_MODES.TABLE,
-                icon: Table2,
-                tooltip: t('Table view'),
-              },
-            ]}
-            value={props.viewMode}
-            onChange={handleViewModeChange}
-            ariaLabel={t('View mode')}
-          />
         </div>
       </div>
 

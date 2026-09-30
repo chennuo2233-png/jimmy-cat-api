@@ -68,6 +68,8 @@ export type PricingModel = {
   input_modalities?: Modality[]
   output_modalities?: Modality[]
   capabilities?: ModelCapability[]
+  /** Alternative public model IDs that resolve to the same priced model. */
+  aliases?: string[]
 }
 
 /** Input/output modalities supported by a model. */

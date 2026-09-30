@@ -5495,5 +5495,18 @@
   "docs.errors.429": "A rate or concurrency limit was reached. Reduce parallel requests and retry with exponential backoff.",
   "docs.errors.clientGone": "The client, browser, proxy, or network closed a streaming connection before completion. Increase timeouts, keep streaming enabled, and retry on a stable network.",
   "docs.support.title": "Still blocked?",
-  "docs.support.description": "Send the request ID, time, endpoint, model, and error text to support. Never send your full API key."
+  "docs.support.description": "Send the request ID, time, endpoint, model, and error text to support. Never send your full API key.",
+  "Cache read": "Cache read",
+  "This model uses a custom billing expression. Open details for the complete pricing rules.": "This model uses a custom billing expression. Open details for the complete pricing rules.",
+  "Price per {{unit}} tokens": "Price per {{unit}} tokens",
+  "Charged per request": "Charged per request",
+  "Also callable as": "Also callable as",
+  "Copy model ID": "Copy model ID",
+  "Copy ID": "Copy ID",
+  "Official / base price": "Official / base price",
+  "Price before group multipliers. Custom models use this as the reference price.": "Price before group multipliers. Custom models use this as the reference price.",
+  "Explore {{count}} unique models and {{ids}} callable model IDs": "Explore {{count}} unique models and {{ids}} callable model IDs",
+  "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.",
+  "Search model name, alias, provider, endpoint, or tag...": "Search model name, alias, provider, endpoint, or tag...",
+  "Alias": "Alias"
 }

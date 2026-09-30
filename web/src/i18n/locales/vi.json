@@ -5495,5 +5495,18 @@
   "docs.errors.429": "Đã đạt giới hạn tốc độ hoặc đồng thời. Giảm số yêu cầu song song và thử lại với thời gian chờ tăng dần.",
   "docs.errors.clientGone": "Ứng dụng, trình duyệt, proxy hoặc mạng đã đóng luồng trước khi hoàn tất. Tăng timeout, giữ streaming bật và thử lại trên mạng ổn định.",
   "docs.support.title": "Vẫn chưa giải quyết được?",
-  "docs.support.description": "Gửi Request ID, thời gian, endpoint, mô hình và nội dung lỗi cho hỗ trợ. Không bao giờ gửi toàn bộ khóa API."
+  "docs.support.description": "Gửi Request ID, thời gian, endpoint, mô hình và nội dung lỗi cho hỗ trợ. Không bao giờ gửi toàn bộ khóa API.",
+  "Cache read": "Đọc bộ nhớ đệm",
+  "This model uses a custom billing expression. Open details for the complete pricing rules.": "Mô hình này dùng biểu thức tính phí tùy chỉnh. Mở phần chi tiết để xem đầy đủ quy tắc tính phí.",
+  "Price per {{unit}} tokens": "Giá cho mỗi {{unit}} token",
+  "Charged per request": "Tính phí theo yêu cầu",
+  "Also callable as": "Cũng có thể gọi bằng tên",
+  "Copy model ID": "Sao chép ID mô hình",
+  "Copy ID": "Sao chép ID",
+  "Official / base price": "Giá chính thức / cơ sở",
+  "Price before group multipliers. Custom models use this as the reference price.": "Giá trước khi áp dụng hệ số nhóm. Với mô hình tùy chỉnh, đây là giá tham chiếu.",
+  "Explore {{count}} unique models and {{ids}} callable model IDs": "Khám phá {{count}} mô hình riêng biệt và {{ids}} ID mô hình có thể gọi",
+  "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "So sánh giá chính thức hoặc giá cơ sở với giá thực tế của từng nhóm. Bí danh AGAM được gộp vào cùng một mô hình.",
+  "Search model name, alias, provider, endpoint, or tag...": "Tìm theo tên mô hình, bí danh, nhà cung cấp, endpoint hoặc thẻ…",
+  "Alias": "Bí danh"
 }

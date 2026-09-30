@@ -5495,5 +5495,18 @@
   "docs.errors.429": "Une limite de débit ou de concurrence est atteinte. Réduisez les requêtes parallèles et réessayez avec un délai exponentiel.",
   "docs.errors.clientGone": "Le client, le navigateur, le proxy ou le réseau a fermé le flux avant la fin. Augmentez les délais, gardez le streaming activé et réessayez sur un réseau stable.",
   "docs.support.title": "Toujours bloqué ?",
-  "docs.support.description": "Envoyez au support le Request ID, l’heure, l’endpoint, le modèle et le texte de l’erreur. Ne transmettez jamais votre clé API complète."
+  "docs.support.description": "Envoyez au support le Request ID, l’heure, l’endpoint, le modèle et le texte de l’erreur. Ne transmettez jamais votre clé API complète.",
+  "Cache read": "Lecture du cache",
+  "This model uses a custom billing expression. Open details for the complete pricing rules.": "Ce modèle utilise une formule de facturation personnalisée. Ouvrez les détails pour consulter toutes les règles tarifaires.",
+  "Price per {{unit}} tokens": "Prix pour {{unit}} jetons",
+  "Charged per request": "Facturé par requête",
+  "Also callable as": "Également accessible sous",
+  "Copy model ID": "Copier l’identifiant du modèle",
+  "Copy ID": "Copier l’identifiant",
+  "Official / base price": "Prix officiel / de base",
+  "Price before group multipliers. Custom models use this as the reference price.": "Prix avant application des coefficients de groupe. Pour les modèles personnalisés, il sert de prix de référence.",
+  "Explore {{count}} unique models and {{ids}} callable model IDs": "Explorez {{count}} modèles uniques et {{ids}} identifiants de modèle utilisables",
+  "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Comparez le prix officiel ou de base au prix réel de chaque groupe disponible. Les alias AGAM sont regroupés avec le même modèle.",
+  "Search model name, alias, provider, endpoint, or tag...": "Rechercher un modèle, un alias, un fournisseur, un endpoint ou une étiquette…",
+  "Alias": "Alias"
 }
