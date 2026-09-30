@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -36,16 +37,36 @@ const languages: { id: CodeLanguage; label: string }[] = [
   { id: 'powershell', label: 'PowerShell' },
 ]
 
+const installCommands: Record<
+  ApiProtocol,
+  Partial<Record<CodeLanguage, string>>
+> = {
+  openai: {
+    python: 'pip install openai',
+    typescript: 'npm install openai',
+  },
+  claude: {
+    python: 'pip install anthropic',
+    typescript: 'npm install @anthropic-ai/sdk',
+  },
+}
+
 function CodePanel(props: { protocol: ApiProtocol }) {
   const { t } = useTranslation()
   const [language, setLanguage] = useState<CodeLanguage>('python')
   const [copied, setCopied] = useState(false)
   const code = codeSamples[props.protocol][language]
+  const installCommand = installCommands[props.protocol][language]
 
   const copyCode = async () => {
-    await navigator.clipboard.writeText(code)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1600)
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      toast.success(t('docs.examples.copySuccess'))
+      window.setTimeout(() => setCopied(false), 1600)
+    } catch {
+      toast.error(t('docs.examples.copyFailed'))
+    }
   }
 
   return (
@@ -75,6 +96,14 @@ function CodePanel(props: { protocol: ApiProtocol }) {
           {copied ? <Check className='text-primary' /> : <Copy />}
         </Button>
       </div>
+      <div className='border-border bg-background/50 flex min-h-10 items-center gap-2 border-b px-4 py-2 text-xs'>
+        <span className='text-muted-foreground shrink-0'>
+          {t('docs.examples.installLabel')}
+        </span>
+        <code className='overflow-x-auto whitespace-nowrap'>
+          {installCommand ?? t('docs.examples.noPackageRequired')}
+        </code>
+      </div>
       {languages.map((item) => (
         <TabsContent key={item.id} value={item.id} className='m-0'>
           <pre className='max-h-[34rem] overflow-auto p-4 text-[0.78rem] leading-6'>
@@ -91,7 +120,10 @@ export function ApiCodeExamples() {
 
   return (
     <Tabs defaultValue='openai' className='gap-4'>
-      <TabsList aria-label={t('docs.examples.protocolSelector')}>
+      <TabsList
+        aria-label={t('docs.examples.protocolSelector')}
+        className='grid h-auto w-full grid-cols-2 sm:w-fit'
+      >
         <TabsTrigger value='openai'>
           {t('docs.protocol.openai.title')}
         </TabsTrigger>

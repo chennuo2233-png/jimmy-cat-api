@@ -17,19 +17,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 export const INTERFACE_LANGUAGE_OPTIONS = [
-  { code: 'zhCN', label: '简体中文' },
-  { code: 'en', label: 'English' },
-  { code: 'fr', label: 'Français' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'ja', label: '日本語' },
-  { code: 'vi', label: 'Tiếng Việt' },
-  { code: 'zhTW', label: '繁體中文' },
+  { code: 'zhCN', flag: '🇨🇳', label: '简体中文' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'ru', flag: '🇷🇺', label: 'Русский' },
+  { code: 'ja', flag: '🇯🇵', label: '日本語' },
+  { code: 'vi', flag: '🇻🇳', label: 'Tiếng Việt' },
+  { code: 'zhTW', flag: '🇹🇼', label: '繁體中文' },
 ] as const
 
 export type InterfaceLanguageCode =
   (typeof INTERFACE_LANGUAGE_OPTIONS)[number]['code']
 
-export function normalizeInterfaceLanguage(value?: string | null): string {
+export function normalizeInterfaceLanguage(
+  value?: string | null
+): InterfaceLanguageCode {
   if (!value) return 'ru'
 
   let normalized = value.trim().replaceAll('_', '-').toLowerCase()
@@ -45,9 +47,10 @@ export function normalizeInterfaceLanguage(value?: string | null): string {
     normalized = 'zhCN'
   }
 
-  return INTERFACE_LANGUAGE_OPTIONS.some((lang) => lang.code === normalized)
-    ? normalized
-    : 'ru'
+  const matchedLanguage = INTERFACE_LANGUAGE_OPTIONS.find(
+    (language) => language.code === normalized
+  )
+  return matchedLanguage?.code ?? 'ru'
 }
 
 /**

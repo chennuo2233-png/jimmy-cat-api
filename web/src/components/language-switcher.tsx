@@ -16,8 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Languages, Check } from 'lucide-react'
-import { useCallback } from 'react'
+import { Check, Languages } from 'lucide-react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
@@ -30,15 +30,30 @@ import {
 import {
   INTERFACE_LANGUAGE_OPTIONS,
   normalizeInterfaceLanguage,
+  toIntlLocale,
 } from '@/i18n/languages'
 import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth-store'
 
-export function LanguageSwitcher() {
+type LanguageSwitcherProps = {
+  showLabel?: boolean
+  align?: 'start' | 'center' | 'end'
+  className?: string
+}
+
+export function LanguageSwitcher(props: LanguageSwitcherProps) {
   const { i18n, t } = useTranslation()
   const user = useAuthStore((s) => s.auth.user)
   const currentLanguage = normalizeInterfaceLanguage(i18n.language)
+  const currentOption = INTERFACE_LANGUAGE_OPTIONS.find(
+    (language) => language.code === currentLanguage
+  )
+
+  useEffect(() => {
+    document.documentElement.lang = toIntlLocale(currentLanguage) ?? 'ru'
+  }, [currentLanguage])
+
   const handleChangeLanguage = useCallback(
     async (code: string) => {
       await i18n.changeLanguage(code)
@@ -56,18 +71,42 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
-        render={<Button variant='ghost' size='icon' className='h-9 w-9' />}
+        render={
+          <Button
+            variant={props.showLabel ? 'outline' : 'ghost'}
+            size={props.showLabel ? 'default' : 'icon'}
+            className={cn(
+              props.showLabel
+                ? 'h-9 min-w-36 justify-between gap-2'
+                : 'h-9 w-9',
+              props.className
+            )}
+          />
+        }
       >
-        <Languages className='size-[1.2rem]' />
-        <span className='sr-only'>{t('Change language')}</span>
+        {props.showLabel ? (
+          <>
+            <span aria-hidden='true'>{currentOption?.flag}</span>
+            <span className='flex-1 text-start'>{currentOption?.label}</span>
+            <Languages className='size-4' aria-hidden='true' />
+          </>
+        ) : (
+          <>
+            <Languages className='size-[1.2rem]' aria-hidden='true' />
+            <span className='sr-only'>{t('Change language')}</span>
+          </>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end'>
+      <DropdownMenuContent align={props.align ?? 'end'} className='min-w-48'>
         {INTERFACE_LANGUAGE_OPTIONS.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => handleChangeLanguage(lang.code)}
           >
-            {lang.label}
+            <span className='text-base' aria-hidden='true'>
+              {lang.flag}
+            </span>
+            <span className='flex-1'>{lang.label}</span>
             <Check
               size={14}
               className={cn(

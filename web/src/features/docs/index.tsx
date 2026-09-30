@@ -25,14 +25,17 @@ import {
   CircleDollarSign,
   KeyRound,
   LifeBuoy,
+  ListChecks,
   LockKeyhole,
   Network,
+  Settings2,
   TerminalSquare,
   Wrench,
   Zap,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { LanguageSwitcher } from '@/components/language-switcher'
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -48,13 +51,6 @@ import {
 import { Separator } from '@/components/ui/separator'
 
 import { ApiCodeExamples } from './components/api-code-examples'
-
-const endpointRows = [
-  ['OpenAI SDK', 'https://agamai.online/v1'],
-  ['Claude SDK', 'https://agamai.online'],
-  ['Claude Messages', 'POST /v1/messages'],
-  ['Model list', 'GET /v1/models'],
-] as const
 
 function SectionHeading(props: {
   eyebrow: string
@@ -102,6 +98,7 @@ export function Docs() {
     ['quick-start', t('docs.nav.quickStart')],
     ['protocols', t('docs.nav.protocols')],
     ['examples', t('docs.nav.examples')],
+    ['clients', t('docs.nav.clients')],
     ['tools', t('docs.nav.tools')],
     ['billing', t('docs.nav.billing')],
     ['errors', t('docs.nav.errors')],
@@ -113,6 +110,13 @@ export function Docs() {
     ['404', t('docs.errors.404')],
     ['429', t('docs.errors.429')],
     ['client_gone', t('docs.errors.clientGone')],
+  ]
+
+  const endpointRows = [
+    [t('docs.endpoints.openaiSdk'), 'https://agamai.online/v1'],
+    [t('docs.endpoints.claudeSdk'), 'https://agamai.online'],
+    [t('docs.endpoints.claudeMessages'), 'POST /v1/messages'],
+    [t('docs.endpoints.modelList'), 'GET /v1/models'],
   ]
 
   return (
@@ -152,6 +156,17 @@ export function Docs() {
                 {t('docs.hero.models')}
                 <ArrowRight data-icon='inline-end' />
               </Button>
+            </div>
+            <div className='border-border/70 bg-card/70 flex flex-col items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm backdrop-blur sm:flex-row'>
+              <div className='text-center sm:text-start'>
+                <p className='text-sm font-medium'>
+                  {t('docs.language.title')}
+                </p>
+                <p className='text-muted-foreground text-xs'>
+                  {t('docs.language.description')}
+                </p>
+              </div>
+              <LanguageSwitcher showLabel align='center' />
             </div>
           </div>
         </section>
@@ -274,6 +289,93 @@ export function Docs() {
               </Card>
             </section>
 
+            <section id='clients' className='scroll-mt-24'>
+              <SectionHeading
+                eyebrow={t('docs.clients.eyebrow')}
+                title={t('docs.clients.title')}
+                description={t('docs.clients.description')}
+              />
+              <div className='mt-8 grid gap-4 md:grid-cols-2'>
+                <Card>
+                  <CardHeader>
+                    <Settings2 className='text-primary mb-2 size-6' />
+                    <CardTitle>{t('docs.clients.generic.title')}</CardTitle>
+                    <CardDescription className='leading-6'>
+                      {t('docs.clients.generic.description')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className='grid gap-3 text-sm'>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.baseUrl')}
+                        </dt>
+                        <dd>
+                          <code>https://agamai.online/v1</code>
+                        </dd>
+                      </div>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.apiKey')}
+                        </dt>
+                        <dd>{t('docs.clients.yourKey')}</dd>
+                      </div>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.model')}
+                        </dt>
+                        <dd>{t('docs.clients.exactModel')}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <Braces className='text-primary mb-2 size-6' />
+                    <CardTitle>{t('docs.clients.claude.title')}</CardTitle>
+                    <CardDescription className='leading-6'>
+                      {t('docs.clients.claude.description')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className='grid gap-3 text-sm'>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.baseUrl')}
+                        </dt>
+                        <dd>
+                          <code>https://agamai.online</code>
+                        </dd>
+                      </div>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.header')}
+                        </dt>
+                        <dd>
+                          <code>x-api-key</code>
+                        </dd>
+                      </div>
+                      <div className='grid gap-1 sm:grid-cols-[7rem_1fr]'>
+                        <dt className='text-muted-foreground'>
+                          {t('docs.clients.path')}
+                        </dt>
+                        <dd>
+                          <code>/v1/messages</code>
+                        </dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+              </div>
+              <Alert className='mt-4'>
+                <ListChecks />
+                <AlertTitle>{t('docs.clients.validation.title')}</AlertTitle>
+                <AlertDescription>
+                  {t('docs.clients.validation.description')}
+                </AlertDescription>
+              </Alert>
+            </section>
+
             <section id='tools' className='scroll-mt-24'>
               <SectionHeading
                 eyebrow={t('docs.tools.eyebrow')}
@@ -309,6 +411,27 @@ export function Docs() {
                   </CardHeader>
                 </Card>
               </div>
+              <Card className='mt-4 overflow-hidden'>
+                <CardHeader>
+                  <CardTitle>
+                    {t('docs.tools.streamingExample.title')}
+                  </CardTitle>
+                  <CardDescription className='leading-6'>
+                    {t('docs.tools.streamingExample.description')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <pre className='bg-muted/50 overflow-x-auto rounded-lg p-4 text-xs leading-6'>
+                    <code>{`{
+  "model": "jmm-fable-5-1",
+  "stream": true,
+  "messages": [
+    { "role": "user", "content": "Hello" }
+  ]
+}`}</code>
+                  </pre>
+                </CardContent>
+              </Card>
             </section>
 
             <section id='billing' className='scroll-mt-24'>
