@@ -29,6 +29,7 @@ import {
   PricingToolbar,
   ModelCardGrid,
   ModelDetailsDrawer,
+  ModelFamilyFilter,
 } from './components'
 import { EXCLUDED_GROUPS, VIEW_MODES } from './constants'
 import { useFilters } from './hooks/use-filters'
@@ -201,6 +202,11 @@ export function Pricing() {
                 'Search model name, alias, provider, endpoint, or tag...'
               )}
               className='mx-auto mt-4 max-w-2xl sm:mt-6'
+            />
+            <ModelFamilyFilter
+              models={catalogModels}
+              value={vendorFilter}
+              onChange={setVendorFilter}
             />
           </header>
 

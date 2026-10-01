@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "探索 {{count}} 個實際模型與 {{ids}} 個可呼叫模型 ID",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "比較官方或基礎價格與各可用分組的實際價格；AGAM 別名已合併至同一模型。",
   "Search model name, alias, provider, endpoint, or tag...": "搜尋模型名稱、別名、供應商、端點或標籤……",
-  "Alias": "別名"
+  "Alias": "別名",
+  "Feature in Model Square": "模型廣場置頂",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "讓此模型固定顯示於模型廣場頂部，並標記為推薦。",
+  "Featured": "精選",
+  "Model families": "模型系列",
+  "All models": "所有模型",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

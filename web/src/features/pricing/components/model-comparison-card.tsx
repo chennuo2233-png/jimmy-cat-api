@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ChevronRight, Copy } from 'lucide-react'
+import { ChevronRight, Copy, Sparkles } from 'lucide-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -87,6 +87,12 @@ export const ModelComparisonCard = memo(function ModelComparisonCard(
               <h2 className='font-mono text-base font-bold break-all sm:text-lg'>
                 {props.model.model_name}
               </h2>
+              {props.model.featured && (
+                <Badge className='gap-1 border border-amber-300/40 bg-amber-400/15 text-amber-300 hover:bg-amber-400/15'>
+                  <Sparkles className='size-3' aria-hidden='true' />
+                  {t('Featured')}
+                </Badge>
+              )}
               {props.model.vendor_name && (
                 <Badge variant='outline' className='text-[10px]'>
                   {props.model.vendor_name}

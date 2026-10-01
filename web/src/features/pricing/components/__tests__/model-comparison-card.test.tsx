@@ -50,6 +50,7 @@ const model: PricingModel = {
   completion_ratio: 5,
   enable_groups: ['default', 'economy'],
   supported_endpoint_types: ['anthropic'],
+  featured: true,
 }
 
 describe('ModelComparisonCard', () => {
@@ -75,6 +76,7 @@ describe('ModelComparisonCard', () => {
     expect(screen.getByRole('region', { name: 'default' })).toBeVisible()
     expect(screen.getByRole('region', { name: 'economy' })).toBeVisible()
     expect(screen.getByText('agam-fable-5-1')).toBeVisible()
+    expect(screen.getByText('Featured')).toBeVisible()
     expect(screen.getByText('0.3×')).toBeVisible()
     expect(screen.getAllByText('$10').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('$3')).toBeVisible()

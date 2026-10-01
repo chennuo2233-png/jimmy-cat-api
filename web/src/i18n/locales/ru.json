@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "{{count}} уникальных моделей и {{ids}} доступных ID для вызова",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Сравните официальную или базовую цену с фактической ценой каждой доступной группы. Псевдонимы AGAM объединены с соответствующей моделью.",
   "Search model name, alias, provider, endpoint, or tag...": "Поиск по названию, псевдониму, поставщику, эндпоинту или тегу…",
-  "Alias": "Псевдоним"
+  "Alias": "Псевдоним",
+  "Feature in Model Square": "Закрепить в каталоге моделей",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "Показывать эту модель вверху каталога и отметить её как рекомендуемую.",
+  "Featured": "Рекомендуемая",
+  "Model families": "Семейства моделей",
+  "All models": "Все модели",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "Explorez {{count}} modèles uniques et {{ids}} identifiants de modèle utilisables",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Comparez le prix officiel ou de base au prix réel de chaque groupe disponible. Les alias AGAM sont regroupés avec le même modèle.",
   "Search model name, alias, provider, endpoint, or tag...": "Rechercher un modèle, un alias, un fournisseur, un endpoint ou une étiquette…",
-  "Alias": "Alias"
+  "Alias": "Alias",
+  "Feature in Model Square": "Mettre en avant dans le catalogue des modèles",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "Maintenez ce modèle en tête du catalogue et marquez-le comme recommandé.",
+  "Featured": "Mis en avant",
+  "Model families": "Familles de modèles",
+  "All models": "Tous les modèles",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

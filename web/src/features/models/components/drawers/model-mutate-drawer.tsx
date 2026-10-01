@@ -98,6 +98,7 @@ const extendedModelFormSchema = z.object({
   name_rule: z.number(),
   status: z.boolean(),
   sync_official: z.boolean(),
+  featured: z.boolean(),
   price: z.string().optional(),
   ratio: z.string().optional(),
   cacheRatio: z.string().optional(),
@@ -370,6 +371,7 @@ export function ModelMutateDrawer({
       name_rule: 0,
       status: true,
       sync_official: true,
+      featured: false,
       price: '',
       ratio: '',
       cacheRatio: '',
@@ -438,6 +440,7 @@ export function ModelMutateDrawer({
         name_rule: model.name_rule || 0,
         status: model.status === 1,
         sync_official: model.sync_official === 1,
+        featured: model.featured,
         ...pricing.fields,
       })
     } else if (open && !isEditing) {
@@ -463,6 +466,7 @@ export function ModelMutateDrawer({
         name_rule: 0,
         status: true,
         sync_official: true,
+        featured: false,
         ...pricing.fields,
       })
     }
@@ -1361,6 +1365,31 @@ export function ModelMutateDrawer({
                       </FormLabel>
                       <FormDescription>
                         {t('Sync this model with official upstream')}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='featured'
+                render={({ field }) => (
+                  <FormItem className={sideDrawerSwitchItemClassName()}>
+                    <div className='flex flex-col gap-0.5'>
+                      <FormLabel className='text-base'>
+                        {t('Feature in Model Square')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t(
+                          'Keep this model at the top of the Model Square and mark it as recommended.'
+                        )}
                       </FormDescription>
                     </div>
                     <FormControl>

@@ -109,6 +109,7 @@ export function consolidatePricingModels(models: PricingModel[]) {
     }
 
     merged.aliases = mergeUnique(merged.aliases, [alias.model_name])
+    merged.featured = Boolean(merged.featured || alias.featured)
     merged.enable_groups = mergeUnique(
       merged.enable_groups,
       alias.enable_groups

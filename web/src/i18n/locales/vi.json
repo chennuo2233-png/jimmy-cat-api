@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "Khám phá {{count}} mô hình riêng biệt và {{ids}} ID mô hình có thể gọi",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "So sánh giá chính thức hoặc giá cơ sở với giá thực tế của từng nhóm. Bí danh AGAM được gộp vào cùng một mô hình.",
   "Search model name, alias, provider, endpoint, or tag...": "Tìm theo tên mô hình, bí danh, nhà cung cấp, endpoint hoặc thẻ…",
-  "Alias": "Bí danh"
+  "Alias": "Bí danh",
+  "Feature in Model Square": "Ghim trên danh mục mô hình",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "Giữ mô hình này ở đầu danh mục và đánh dấu là được đề xuất.",
+  "Featured": "Nổi bật",
+  "Model families": "Dòng mô hình",
+  "All models": "Tất cả mô hình",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

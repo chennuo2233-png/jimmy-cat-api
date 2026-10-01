@@ -20,7 +20,7 @@ import { describe, expect, test } from 'vitest'
 
 import type { PricingModel } from '../../types'
 import { consolidatePricingModels } from '../catalog'
-import { filterBySearch } from '../filters'
+import { filterBySearch, sortModels } from '../filters'
 
 function createModel(
   modelName: string,
@@ -87,5 +87,31 @@ describe('consolidatePricingModels', () => {
     ])
 
     expect(filterBySearch(consolidated, 'agam-fable')).toHaveLength(1)
+  })
+
+  test('inherits featured state from a merged AGAM alias', () => {
+    const result = consolidatePricingModels([
+      createModel('claude-fable-5-1'),
+      createModel('agam-fable-5-1', { featured: true }),
+    ])
+
+    expect(result).toHaveLength(1)
+    expect(result[0].featured).toBe(true)
+  })
+
+  test('keeps featured models first for every customer sort option', () => {
+    const regular = createModel('alpha', { model_ratio: 1 })
+    const featured = createModel('zeta', {
+      model_ratio: 100,
+      featured: true,
+    })
+
+    expect(sortModels([regular, featured], 'name')[0].model_name).toBe('zeta')
+    expect(sortModels([regular, featured], 'price-low')[0].model_name).toBe(
+      'zeta'
+    )
+    expect(sortModels([regular, featured], 'price-high')[0].model_name).toBe(
+      'zeta'
+    )
   })
 })

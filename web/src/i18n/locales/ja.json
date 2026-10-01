@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "{{count}} 個の実モデルと {{ids}} 個の呼び出し可能なモデル ID",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "公式または基準価格と、利用可能な各グループの実価格を比較できます。AGAM エイリアスは同じモデルに統合されています。",
   "Search model name, alias, provider, endpoint, or tag...": "モデル名、エイリアス、プロバイダー、エンドポイント、タグを検索…",
-  "Alias": "エイリアス"
+  "Alias": "エイリアス",
+  "Feature in Model Square": "モデル広場で優先表示",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "このモデルをモデル広場の先頭に固定し、おすすめとして表示します。",
+  "Featured": "注目",
+  "Model families": "モデルファミリー",
+  "All models": "すべてのモデル",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

@@ -5508,5 +5508,13 @@
   "Explore {{count}} unique models and {{ids}} callable model IDs": "Explore {{count}} unique models and {{ids}} callable model IDs",
   "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.": "Compare the official or base price with every available group price. AGAM aliases are merged into the same model.",
   "Search model name, alias, provider, endpoint, or tag...": "Search model name, alias, provider, endpoint, or tag...",
-  "Alias": "Alias"
+  "Alias": "Alias",
+  "Feature in Model Square": "Feature in Model Square",
+  "Keep this model at the top of the Model Square and mark it as recommended.": "Keep this model at the top of the Model Square and mark it as recommended.",
+  "Featured": "Featured",
+  "Model families": "Model families",
+  "All models": "All models",
+  "Anthropic / Claude": "Anthropic / Claude",
+  "OpenAI / ChatGPT": "OpenAI / ChatGPT",
+  "GLM": "GLM"
 }

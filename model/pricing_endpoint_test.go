@@ -162,6 +162,23 @@ func TestPricingModelMetadataEndpointsCanProvideEndpointWithoutChannelInference(
 	assert.Equal(t, []constant.EndpointType{constant.EndpointTypeOpenAI}, byModel["metadata-only-model"])
 }
 
+func TestPricingIncludesFeaturedModelMetadata(t *testing.T) {
+	resetPricingEndpointTestTables(t)
+
+	insertPricingEndpointChannel(t, 105, constant.ChannelTypeOpenAI, dto.ChannelOtherSettings{})
+	insertPricingEndpointAbility(t, 105, "featured-model")
+	require.NoError(t, DB.Create(&Model{
+		ModelName: "featured-model",
+		Status:    1,
+		Featured:  true,
+		NameRule:  NameRuleExact,
+	}).Error)
+
+	pricings := GetPricing()
+	require.Len(t, pricings, 1)
+	assert.True(t, pricings[0].Featured)
+}
+
 func TestPricingAdvancedCustomMissingConfigFallsBackToChannelType(t *testing.T) {
 	resetPricingEndpointTestTables(t)
 

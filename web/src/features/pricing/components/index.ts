@@ -25,6 +25,7 @@ export { ModelPricePanel } from './model-price-panel'
 export { LoadingSkeleton } from './loading-skeleton'
 export { EmptyState } from './empty-state'
 export { SearchBar } from './search-bar'
+export { ModelFamilyFilter } from './model-family-filter'
 export {
   ModelDetails,
   ModelDetailsContent,

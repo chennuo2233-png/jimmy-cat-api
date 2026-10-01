@@ -348,6 +348,9 @@ func migrateDB() error {
 	if err != nil {
 		return err
 	}
+	if err := backfillModelFeatured(); err != nil {
+		return err
+	}
 	if err := InitializeUserAuthVersions(); err != nil {
 		return err
 	}
@@ -432,6 +435,9 @@ func migrateDBFast() error {
 			return err
 		}
 	}
+	if err := backfillModelFeatured(); err != nil {
+		return err
+	}
 	if err := InitializeUserAuthVersions(); err != nil {
 		return err
 	}
@@ -449,6 +455,12 @@ func migrateDBFast() error {
 	}
 	common.SysLog("database migrated")
 	return nil
+}
+
+func backfillModelFeatured() error {
+	return DB.Model(&Model{}).
+		Where("featured IS NULL").
+		Update("featured", false).Error
 }
 
 func migrateLOGDB() error {

@@ -114,20 +114,25 @@ export function sortModels(
   sortBy: string
 ): PricingModel[] {
   const sorted = [...models]
+  let compareModels = (a: PricingModel, b: PricingModel) =>
+    (a.model_name || '').localeCompare(b.model_name || '')
 
   switch (sortBy) {
     case SORT_OPTIONS.NAME:
-      sorted.sort((a, b) =>
-        (a.model_name || '').localeCompare(b.model_name || '')
-      )
       break
     case SORT_OPTIONS.PRICE_LOW:
-      sorted.sort((a, b) => getModelPrice(a) - getModelPrice(b))
+      compareModels = (a, b) => getModelPrice(a) - getModelPrice(b)
       break
     case SORT_OPTIONS.PRICE_HIGH:
-      sorted.sort((a, b) => getModelPrice(b) - getModelPrice(a))
+      compareModels = (a, b) => getModelPrice(b) - getModelPrice(a)
       break
   }
+
+  sorted.sort((a, b) => {
+    const featuredOrder =
+      Number(Boolean(b.featured)) - Number(Boolean(a.featured))
+    return featuredOrder || compareModels(a, b)
+  })
 
   return sorted
 }
