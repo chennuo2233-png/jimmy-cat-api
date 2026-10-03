@@ -44,6 +44,7 @@ type ModelComparisonCardProps = {
   priceRate?: number
   usdExchangeRate?: number
   onDetails: () => void
+  onIntegrationGuide: () => void
 }
 
 export const ModelComparisonCard = memo(function ModelComparisonCard(
@@ -85,7 +86,13 @@ export const ModelComparisonCard = memo(function ModelComparisonCard(
           <div className='min-w-0'>
             <div className='flex flex-wrap items-center gap-2'>
               <h2 className='font-mono text-base font-bold break-all sm:text-lg'>
-                {props.model.model_name}
+                <button
+                  type='button'
+                  onClick={props.onIntegrationGuide}
+                  className='text-start underline-offset-4 transition-colors hover:text-amber-300 hover:underline focus-visible:ring-2 focus-visible:ring-amber-300/60 focus-visible:outline-none'
+                >
+                  {props.model.model_name}
+                </button>
               </h2>
               {props.model.featured && (
                 <Badge className='gap-1 border border-amber-300/40 bg-amber-400/15 text-amber-300 hover:bg-amber-400/15'>

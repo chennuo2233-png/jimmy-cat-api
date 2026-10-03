@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createInstance } from 'i18next'
 import { I18nextProvider, initReactI18next } from 'react-i18next'
 import { describe, expect, test, vi } from 'vitest'
@@ -66,6 +67,7 @@ describe('ModelComparisonCard', () => {
             economy: { desc: 'Economy access', ratio: 0.3 },
           }}
           onDetails={vi.fn()}
+          onIntegrationGuide={vi.fn()}
         />
       </I18nextProvider>
     )
@@ -80,5 +82,27 @@ describe('ModelComparisonCard', () => {
     expect(screen.getByText('0.3×')).toBeVisible()
     expect(screen.getAllByText('$10').length).toBeGreaterThanOrEqual(2)
     expect(screen.getByText('$3')).toBeVisible()
+  })
+
+  test('opens model details when the model name is selected', async () => {
+    const user = userEvent.setup()
+    const onIntegrationGuide = vi.fn()
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <ModelComparisonCard
+          model={model}
+          tokenUnit='M'
+          groupRatio={{ default: 1 }}
+          usableGroup={{ default: { desc: 'Standard access', ratio: 1 } }}
+          onDetails={vi.fn()}
+          onIntegrationGuide={onIntegrationGuide}
+        />
+      </I18nextProvider>
+    )
+
+    await user.click(screen.getByRole('button', { name: 'claude-fable-5-1' }))
+
+    expect(onIntegrationGuide).toHaveBeenCalledOnce()
   })
 })

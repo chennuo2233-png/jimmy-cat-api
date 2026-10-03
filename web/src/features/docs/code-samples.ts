@@ -29,7 +29,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="jmm-fable-5-1",
+    model="agam-fable-5-1",
     messages=[
         {"role": "user", "content": "Introduce yourself briefly."}
     ],
@@ -44,7 +44,7 @@ const client = new OpenAI({
 })
 
 const response = await client.chat.completions.create({
-  model: 'jmm-fable-5-1',
+  model: 'agam-fable-5-1',
   messages: [
     { role: 'user', content: 'Introduce yourself briefly.' },
   ],
@@ -55,7 +55,7 @@ console.log(response.choices[0].message.content)`,
   -H "Authorization: Bearer YOUR_AGAM_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "jmm-fable-5-1",
+    "model": "agam-fable-5-1",
     "messages": [
       {"role": "user", "content": "Introduce yourself briefly."}
     ]
@@ -65,7 +65,7 @@ console.log(response.choices[0].message.content)`,
 }
 
 $body = @{
-  model = "jmm-fable-5-1"
+  model = "agam-fable-5-1"
   messages = @(
     @{
       role = "user"
@@ -92,7 +92,7 @@ client = Anthropic(
 )
 
 message = client.messages.create(
-    model="jmm-fable-5-1",
+    model="agam-fable-5-1",
     max_tokens=1024,
     messages=[
         {"role": "user", "content": "Introduce yourself briefly."}
@@ -108,7 +108,7 @@ const client = new Anthropic({
 })
 
 const message = await client.messages.create({
-  model: 'jmm-fable-5-1',
+  model: 'agam-fable-5-1',
   max_tokens: 1024,
   messages: [
     { role: 'user', content: 'Introduce yourself briefly.' },
@@ -121,7 +121,7 @@ console.log(message.content)`,
   -H "anthropic-version: 2023-06-01" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "jmm-fable-5-1",
+    "model": "agam-fable-5-1",
     "max_tokens": 1024,
     "messages": [
       {"role": "user", "content": "Introduce yourself briefly."}
@@ -133,7 +133,7 @@ console.log(message.content)`,
 }
 
 $body = @{
-  model = "jmm-fable-5-1"
+  model = "agam-fable-5-1"
   max_tokens = 1024
   messages = @(
     @{

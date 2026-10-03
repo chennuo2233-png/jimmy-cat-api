@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import {
+  BookOpen,
   ChevronRight,
   Gauge,
   KeyRound,
@@ -32,11 +33,14 @@ import {
   CodeBlock,
   CodeBlockCopyButton,
 } from '@/components/ai-elements/code-block'
+import { CopyButton } from '@/components/copy-button'
 import {
   StaticDataTable,
   staticDataTableClassNames as tableStyles,
 } from '@/components/data-table'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useStatus } from '@/hooks/use-status'
 
@@ -82,6 +86,44 @@ type SampleContext = {
   endpointPath: string
 }
 
+type ModelEndpoint = {
+  type: string
+  path: string
+  method: string
+}
+
+function getServerBaseUrl(status: unknown): string {
+  const statusRecord = status as Record<string, unknown> | null
+  const statusData = statusRecord?.data as Record<string, unknown> | undefined
+  const candidate =
+    statusRecord?.server_address ??
+    statusRecord?.serverAddress ??
+    statusData?.server_address ??
+    statusData?.serverAddress
+
+  if (candidate && typeof candidate === 'string') {
+    return candidate.replace(/\/$/, '')
+  }
+  if (typeof window !== 'undefined') return window.location.origin
+  return 'https://api.example.com'
+}
+
+function getModelEndpoints(
+  model: PricingModel,
+  endpointMap: Record<string, { path?: string; method?: string }>
+): ModelEndpoint[] {
+  return (model.supported_endpoint_types || [])
+    .map((type) => {
+      const info = endpointMap[type] || {}
+      let path = info.path || ''
+      if (path.includes('{model}')) {
+        path = replaceModelInPath(path, model.model_name || '')
+      }
+      return { type, path, method: info.method || 'POST' }
+    })
+    .filter((endpoint) => Boolean(endpoint.path))
+}
+
 function buildChatSample(lang: Lang, ctx: SampleContext): string {
   const url = `${ctx.baseUrl}${ctx.endpointPath}`
   const isResponses = ctx.endpointType === 'openai-response'
@@ -109,7 +151,7 @@ function buildChatSample(lang: Lang, ctx: SampleContext): string {
       `curl ${url} \\`,
       `  -H "Authorization: Bearer $${ctx.apiKeyEnv}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d '${bodyJson.replace(/\n/g, '\n     ')}'`,
+      `  -d '${bodyJson.replaceAll('\n', '\n     ')}'`,
     ].join('\n')
   }
 
@@ -177,7 +219,7 @@ function buildAnthropicSample(lang: Lang, ctx: SampleContext): string {
       `  -H "x-api-key: $${ctx.apiKeyEnv}" \\`,
       `  -H "anthropic-version: 2023-06-01" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d '${body.replace(/\n/g, '\n     ')}'`,
+      `  -d '${body.replaceAll('\n', '\n     ')}'`,
     ].join('\n')
   }
   if (lang === 'python') {
@@ -249,7 +291,7 @@ function buildGeminiSample(lang: Lang, ctx: SampleContext): string {
     return [
       `curl '${url}' \\`,
       `  -H 'Content-Type: application/json' \\`,
-      `  -d '${body.replace(/\n/g, '\n     ')}'`,
+      `  -d '${body.replaceAll('\n', '\n     ')}'`,
     ].join('\n')
   }
   if (lang === 'python') {
@@ -299,7 +341,7 @@ function buildEmbeddingSample(lang: Lang, ctx: SampleContext): string {
       `curl ${url} \\`,
       `  -H "Authorization: Bearer $${ctx.apiKeyEnv}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d '${body.replace(/\n/g, '\n     ')}'`,
+      `  -d '${body.replaceAll('\n', '\n     ')}'`,
     ].join('\n')
   }
   if (lang === 'python') {
@@ -365,7 +407,7 @@ function buildImageSample(lang: Lang, ctx: SampleContext): string {
       `curl ${url} \\`,
       `  -H "Authorization: Bearer $${ctx.apiKeyEnv}" \\`,
       `  -H "Content-Type: application/json" \\`,
-      `  -d '${body.replace(/\n/g, '\n     ')}'`,
+      `  -d '${body.replaceAll('\n', '\n     ')}'`,
     ].join('\n')
   }
   if (lang === 'python') {
@@ -430,8 +472,9 @@ function buildSample(
 ): string {
   if (endpointType === 'anthropic') return buildAnthropicSample(lang, ctx)
   if (endpointType === 'gemini') return buildGeminiSample(lang, ctx)
-  if (endpointType === 'embeddings' || endpointType === 'jina-rerank')
+  if (endpointType === 'embeddings' || endpointType === 'jina-rerank') {
     return buildEmbeddingSample(lang, ctx)
+  }
   if (endpointType === 'image-generation') return buildImageSample(lang, ctx)
   return buildChatSample(lang, ctx)
 }
@@ -440,39 +483,102 @@ function buildSample(
 // Code samples section
 // ---------------------------------------------------------------------------
 
-function CodeSamplesSection(props: {
-  model: PricingModel
-  endpointMap: Record<string, { path?: string; method?: string }>
+function IntegrationGuideSection(props: {
+  baseUrl: string
+  endpoints: ModelEndpoint[]
 }) {
   const { t } = useTranslation()
-  const { status } = useStatus()
+  const isClaudeCompatible = props.endpoints.some(
+    (endpoint) => endpoint.type === 'anthropic'
+  )
 
-  const baseUrl = useMemo(() => {
-    const candidate =
-      (status as Record<string, unknown> | null)?.server_address ??
-      (status as Record<string, unknown> | null)?.serverAddress ??
-      (status?.data as Record<string, unknown> | undefined)?.server_address ??
-      (status?.data as Record<string, unknown> | undefined)?.serverAddress
-    if (candidate && typeof candidate === 'string') {
-      return candidate.replace(/\/$/, '')
-    }
-    if (typeof window !== 'undefined') return window.location.origin
-    return 'https://api.example.com'
-  }, [status])
-
-  const endpoints = useMemo(() => {
-    const types = props.model.supported_endpoint_types || []
-    return types
-      .map((type) => {
-        const info = props.endpointMap[type] || {}
-        let path = info.path || ''
-        if (path && path.includes('{model}')) {
-          path = replaceModelInPath(path, props.model.model_name || '')
+  return (
+    <section>
+      <SectionTitle icon={KeyRound}>{t('Integration guide')}</SectionTitle>
+      <div className='overflow-hidden rounded-xl border'>
+        <div className='flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between'>
+          <span className='text-muted-foreground text-sm'>{t('Base URL')}</span>
+          <div className='flex min-w-0 items-center gap-1.5'>
+            <code className='text-foreground truncate font-mono text-sm'>
+              {props.baseUrl}
+            </code>
+            <CopyButton value={props.baseUrl} size='icon' />
+          </div>
+        </div>
+        <Separator />
+        <div className='flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between'>
+          <span className='text-muted-foreground text-sm'>
+            {t('Authentication')}
+          </span>
+          <div className='flex min-w-0 items-center gap-1.5'>
+            <code className='text-foreground truncate font-mono text-sm'>
+              Authorization: Bearer &lt;YOUR_API_KEY&gt;
+            </code>
+            <CopyButton
+              value='Authorization: Bearer <YOUR_API_KEY>'
+              size='icon'
+            />
+          </div>
+        </div>
+        {props.endpoints.length > 0 && (
+          <>
+            <Separator />
+            <div className='flex flex-col gap-3 p-4'>
+              <span className='text-muted-foreground text-sm'>
+                {t('Supported API endpoints')}
+              </span>
+              <div className='flex flex-col gap-2'>
+                {props.endpoints.map((endpoint) => (
+                  <div
+                    key={endpoint.type}
+                    className='bg-muted/35 flex flex-wrap items-center gap-2 rounded-lg px-3 py-2'
+                  >
+                    <Badge variant='secondary'>{endpoint.type}</Badge>
+                    <code className='text-foreground min-w-0 flex-1 font-mono text-xs sm:text-sm'>
+                      {endpoint.path}
+                    </code>
+                    <Badge variant='outline'>{endpoint.method}</Badge>
+                    <CopyButton
+                      value={`${props.baseUrl}${endpoint.path}`}
+                      size='icon'
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      <p className='text-muted-foreground mt-2 text-xs leading-relaxed'>
+        {isClaudeCompatible
+          ? t('Anthropic-compatible endpoints also accept x-api-key.')
+          : t('Use this model ID in your request.')}
+      </p>
+      <Button
+        variant='outline'
+        size='sm'
+        className='mt-3'
+        render={
+          <a
+            href={isClaudeCompatible ? '/docs#claude-code' : '/docs#examples'}
+          />
         }
-        return { type, path, method: info.method || 'POST' }
-      })
-      .filter((e) => Boolean(e.path))
-  }, [props.model, props.endpointMap])
+        nativeButton={false}
+      >
+        <BookOpen data-icon='inline-start' />
+        {t('View full documentation')}
+      </Button>
+    </section>
+  )
+}
+
+function CodeSamplesSection(props: {
+  model: PricingModel
+  baseUrl: string
+  endpoints: ModelEndpoint[]
+}) {
+  const { t } = useTranslation()
+  const endpoints = props.endpoints
 
   const [endpointType, setEndpointType] = useState<string>(
     endpoints[0]?.type ?? ''
@@ -488,8 +594,8 @@ function CodeSamplesSection(props: {
   }
 
   const code = buildSample(lang, activeEndpoint.type, {
-    baseUrl,
-    apiKeyEnv: 'NEW_API_KEY',
+    baseUrl: props.baseUrl,
+    apiKeyEnv: 'AGAM_API_KEY',
     modelName: props.model.model_name || '',
     endpointType: activeEndpoint.type,
     endpointPath: activeEndpoint.path,
@@ -762,9 +868,22 @@ export function ModelDetailsApi(props: {
   model: PricingModel
   endpointMap: Record<string, { path?: string; method?: string }>
 }) {
+  const { status } = useStatus()
+  const baseUrl = useMemo(() => getServerBaseUrl(status), [status])
+  const endpoints = useMemo(
+    () => getModelEndpoints(props.model, props.endpointMap),
+    [props.model, props.endpointMap]
+  )
+
   return (
     <div className='space-y-6'>
-      <CodeSamplesSection model={props.model} endpointMap={props.endpointMap} />
+      <IntegrationGuideSection baseUrl={baseUrl} endpoints={endpoints} />
+      <CodeSamplesSection
+        key={props.model.model_name}
+        model={props.model}
+        baseUrl={baseUrl}
+        endpoints={endpoints}
+      />
       <AuthSection />
       <SupportedParametersSection model={props.model} />
       <RateLimitsSection model={props.model} />

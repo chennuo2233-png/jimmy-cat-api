@@ -41,6 +41,9 @@ export function Pricing() {
   const [selectedModelName, setSelectedModelName] = useState<string | null>(
     null
   )
+  const [selectedModelTab, setSelectedModelTab] = useState<'overview' | 'api'>(
+    'overview'
+  )
 
   const {
     models,
@@ -96,6 +99,12 @@ export function Pricing() {
 
   const handleModelClick = useCallback((modelName: string) => {
     setSelectedModelName(modelName)
+    setSelectedModelTab('overview')
+  }, [])
+
+  const handleIntegrationGuideClick = useCallback((modelName: string) => {
+    setSelectedModelName(modelName)
+    setSelectedModelTab('api')
   }, [])
 
   const selectedModel = useMemo(
@@ -136,6 +145,7 @@ export function Pricing() {
       <ModelCardGrid
         models={filteredModels}
         onModelClick={handleModelClick}
+        onIntegrationGuide={handleIntegrationGuideClick}
         priceRate={priceRate}
         usdExchangeRate={usdExchangeRate}
         tokenUnit={tokenUnit}
@@ -251,6 +261,7 @@ export function Pricing() {
               onOpenChange={(open) => {
                 if (!open) setSelectedModelName(null)
               }}
+              initialTab={selectedModelTab}
               model={selectedModel}
               groupRatio={groupRatio || {}}
               usableGroup={usableGroup || {}}

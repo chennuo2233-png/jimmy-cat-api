@@ -29,6 +29,7 @@ import { ModelComparisonCard } from './model-comparison-card'
 export interface ModelCardGridProps {
   models: PricingModel[]
   onModelClick: (modelName: string) => void
+  onIntegrationGuide: (modelName: string) => void
   priceRate?: number
   usdExchangeRate?: number
   tokenUnit?: TokenUnit
@@ -70,6 +71,9 @@ export function ModelCardGrid(props: ModelCardGridProps) {
             showRechargePrice={props.showRechargePrice}
             selectedGroup={props.selectedGroup}
             onDetails={() => props.onModelClick(model.model_name || '')}
+            onIntegrationGuide={() =>
+              props.onIntegrationGuide(model.model_name || '')
+            }
           />
         ))}
       </div>

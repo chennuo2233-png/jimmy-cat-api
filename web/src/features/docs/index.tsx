@@ -51,6 +51,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 
 import { ApiCodeExamples } from './components/api-code-examples'
+import { ClaudeCodeGuide } from './components/claude-code-guide'
 
 function SectionHeading(props: {
   eyebrow: string
@@ -99,6 +100,7 @@ export function Docs() {
     ['protocols', t('docs.nav.protocols')],
     ['examples', t('docs.nav.examples')],
     ['clients', t('docs.nav.clients')],
+    ['claude-code', t('docs.nav.claudeCode')],
     ['tools', t('docs.nav.tools')],
     ['billing', t('docs.nav.billing')],
     ['errors', t('docs.nav.errors')],
@@ -374,6 +376,15 @@ export function Docs() {
                   {t('docs.clients.validation.description')}
                 </AlertDescription>
               </Alert>
+            </section>
+
+            <section id='claude-code' className='scroll-mt-24'>
+              <SectionHeading
+                eyebrow={t('docs.claudeCode.eyebrow')}
+                title={t('docs.claudeCode.title')}
+                description={t('docs.claudeCode.description')}
+              />
+              <ClaudeCodeGuide />
             </section>
 
             <section id='tools' className='scroll-mt-24'>

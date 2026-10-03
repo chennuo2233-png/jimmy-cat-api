@@ -1135,6 +1135,7 @@ export interface ModelDetailsContentProps {
   usdExchangeRate: number
   tokenUnit: TokenUnit
   showRechargePrice?: boolean
+  initialTab?: TabValue
 }
 
 export function ModelDetailsContent(props: ModelDetailsContentProps) {
@@ -1149,7 +1150,11 @@ export function ModelDetailsContent(props: ModelDetailsContentProps) {
     <div className='@container/details space-y-4'>
       <ModelHeader model={props.model} />
 
-      <Tabs defaultValue='overview' className='gap-4'>
+      <Tabs
+        key={`${props.model.model_name}-${props.initialTab ?? 'overview'}`}
+        defaultValue={props.initialTab ?? 'overview'}
+        className='gap-4'
+      >
         <TabsList className='bg-muted/60 grid w-full grid-cols-3 gap-1 rounded-lg p-1 group-data-horizontal/tabs:h-auto'>
           {TAB_VALUES.map((value) => {
             const Icon = TAB_META[value].icon
