@@ -4790,7 +4790,7 @@
     "To Anthropic Messages": "Anthropic Messages へ",
     "to confirm": "確認する",
     "To Gemini Generate Content": "Gemini Generate Content へ",
-    "To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, explicit sexual content, graphic violence, and politically sensitive or otherwise prohibited subjects.": "プラットフォームを有用で安心できる場に保つため、違法行為、詐欺、露骨な性的コンテンツ、残虐な暴力、政治的に敏感な話題、その他禁止された内容に関するリクエストを遮断します。",
+    "To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, sexual content involving minors or their sexual exploitation, graphic violence, and politically sensitive or otherwise prohibited subjects.": "プラットフォームを有用で安心できる場に保つため、違法行為、詐欺、未成年者が関与する性的コンテンツまたは性的搾取、残虐な暴力、政治的に敏感な話題、その他禁止された内容に関するリクエストを遮断します。",
     "To Lower": "小文字に変換",
     "To Lowercase": "小文字化",
     "To OpenAI Chat": "OpenAI Chat へ",

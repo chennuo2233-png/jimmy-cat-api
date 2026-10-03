@@ -196,7 +196,7 @@ export function AgamAiHome(props: AgamAiHomeProps) {
             </h2>
             <p className='text-muted-foreground mt-2 max-w-4xl text-sm leading-relaxed'>
               {t(
-                'To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, explicit sexual content, graphic violence, and politically sensitive or otherwise prohibited subjects.'
+                'To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, sexual content involving minors or their sexual exploitation, graphic violence, and politically sensitive or otherwise prohibited subjects.'
               )}
             </p>
           </div>

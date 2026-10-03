@@ -4790,7 +4790,7 @@
     "To Anthropic Messages": "轉 Anthropic Messages",
     "to confirm": "以確認",
     "To Gemini Generate Content": "轉 Gemini Generate Content",
-    "To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, explicit sexual content, graphic violence, and politically sensitive or otherwise prohibited subjects.": "為維持平台安全友善，我們會攔截涉及違法活動、詐騙、露骨色情、血腥暴力、政治敏感及其他被禁止主題的請求。",
+    "To keep the platform useful and welcoming, we block requests involving illegal activity, fraud, sexual content involving minors or their sexual exploitation, graphic violence, and politically sensitive or otherwise prohibited subjects.": "為維持平台安全友善，我們會攔截涉及違法活動、詐騙、未成年人色情或性剝削、血腥暴力、政治敏感及其他被禁止主題的請求。",
     "To Lower": "轉小寫",
     "To Lowercase": "轉小寫",
     "To OpenAI Chat": "轉 OpenAI Chat",
