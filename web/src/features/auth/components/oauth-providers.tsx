@@ -36,6 +36,8 @@ import { TelegramLoginDialog } from './telegram-login-dialog'
 type OAuthProvidersProps = {
   status: SystemStatus | null
   disabled?: boolean
+  legalConsentPending?: boolean
+  onLegalConsentRequired?: () => void
   className?: string
   onWeChatLogin?: () => void
   isWeChatLoading?: boolean
@@ -53,6 +55,8 @@ type ProviderButton = {
 export function OAuthProviders({
   status,
   disabled = false,
+  legalConsentPending = false,
+  onLegalConsentRequired,
   className,
   onWeChatLogin,
   isWeChatLoading = false,
@@ -171,8 +175,18 @@ export function OAuthProviders({
                 variant='outline'
                 type='button'
                 disabled={disabled || isLoading || extraDisabled}
-                onClick={onClick}
-                className='h-11 w-full justify-center gap-2 rounded-lg'
+                onClick={() => {
+                  if (legalConsentPending) {
+                    onLegalConsentRequired?.()
+                    return
+                  }
+                  onClick()
+                }}
+                aria-disabled={legalConsentPending || undefined}
+                className={cn(
+                  'h-11 w-full justify-center gap-2 rounded-lg',
+                  legalConsentPending && 'cursor-pointer opacity-50'
+                )}
               >
                 {icon}
                 {label}
