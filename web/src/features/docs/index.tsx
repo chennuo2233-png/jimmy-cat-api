@@ -434,7 +434,7 @@ export function Docs() {
                 <CardContent>
                   <pre className='bg-muted/50 overflow-x-auto rounded-lg p-4 text-xs leading-6'>
                     <code>{`{
-  "model": "jmm-fable-5-1",
+  "model": "agam-fable-5-1",
   "stream": true,
   "messages": [
     { "role": "user", "content": "Hello" }
