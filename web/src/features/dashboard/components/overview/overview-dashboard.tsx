@@ -67,8 +67,8 @@ import { PerformanceHealthPanel } from './performance-health-panel'
 import { SummaryCards } from './summary-cards'
 import { UptimePanel } from './uptime-panel'
 
-const SETUP_GUIDE_VISIBILITY_STORAGE_KEY =
-  'dashboard_overview_setup_guide_expanded'
+const SETUP_GUIDE_VISIBILITY_STORAGE_KEY_PREFIX =
+  'dashboard_overview_first_call_guide'
 
 const SETUP_GUIDE_CODE_PATTERN = [
   'const request = await client.responses.create({',
@@ -85,6 +85,7 @@ type DashboardActionPath =
   | '/keys'
   | '/wallet'
   | '/playground'
+  | '/docs'
   | '/channels'
   | '/usage-logs'
   | '/pricing'
@@ -121,20 +122,32 @@ interface HeroSignal {
   tone: IconBadgeTone
 }
 
-function getSavedSetupGuideExpanded(): boolean | null {
+function getSetupGuideStorageKey(userId?: number): string {
+  return `${SETUP_GUIDE_VISIBILITY_STORAGE_KEY_PREFIX}:${userId ?? 'anonymous'}`
+}
+
+function getSavedSetupGuideExpanded(userId?: number): boolean | null {
   if (typeof window === 'undefined') return null
-  const saved = window.localStorage.getItem(SETUP_GUIDE_VISIBILITY_STORAGE_KEY)
-  if (saved === 'expanded') return true
-  if (saved === 'collapsed') return false
+  try {
+    const saved = window.localStorage.getItem(getSetupGuideStorageKey(userId))
+    if (saved === 'expanded') return true
+    if (saved === 'collapsed') return false
+  } catch {
+    return null
+  }
   return null
 }
 
-function saveSetupGuideExpanded(expanded: boolean): void {
+function saveSetupGuideExpanded(expanded: boolean, userId?: number): void {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(
-    SETUP_GUIDE_VISIBILITY_STORAGE_KEY,
-    expanded ? 'expanded' : 'collapsed'
-  )
+  try {
+    window.localStorage.setItem(
+      getSetupGuideStorageKey(userId),
+      expanded ? 'expanded' : 'collapsed'
+    )
+  } catch {
+    // Keep the guide usable when browser storage is unavailable.
+  }
 }
 
 function getCurrentOrigin(): string {
@@ -158,7 +171,7 @@ function normalizeEndpoint(sourceUrl?: string): string {
 }
 
 function getPreferredKey(keys: ApiKey[]): ApiKey | null {
-  return keys.find((item) => item.status === 1) ?? keys[0] ?? null
+  return keys.find((item) => item.status === 1) ?? null
 }
 
 function formatDisplayKey(key?: string): string {
@@ -411,6 +424,21 @@ function RequestPreview(props: {
           )
         })}
       </div>
+
+      <div className='mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3'>
+        <span className='text-muted-foreground text-xs'>
+          {t('Need another model or protocol?')}
+        </span>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='h-7 px-2 text-xs'
+          render={<Link to='/docs' />}
+        >
+          <BookOpen data-icon='inline-start' />
+          {t('View code examples')}
+        </Button>
+      </div>
     </motion.div>
   )
 }
@@ -428,10 +456,10 @@ function QuickActionItem(props: { action: QuickAction }) {
         <Icon className='size-4' aria-hidden='true' />
       </span>
       <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
-        <span className='break-words text-sm leading-snug font-medium'>
+        <span className='text-sm leading-snug font-medium break-words'>
           {props.action.title}
         </span>
-        <span className='text-muted-foreground break-words text-xs leading-relaxed'>
+        <span className='text-muted-foreground text-xs leading-relaxed break-words'>
           {props.action.description}
         </span>
       </span>
@@ -465,9 +493,10 @@ export function OverviewDashboard() {
     faq: showFAQPanel,
     uptimeKuma: showUptimePanel,
   } = useDashboardContentVisibility()
-  const [manualSetupGuideExpanded, setManualSetupGuideExpanded] = useState<
-    boolean | null
-  >(() => getSavedSetupGuideExpanded())
+  const [setupGuidePreference, setSetupGuidePreference] = useState(() => ({
+    userId: user?.id,
+    expanded: getSavedSetupGuideExpanded(user?.id),
+  }))
 
   const requestCount = Number(user?.request_count ?? 0)
   const remainQuota = Number(user?.quota ?? 0)
@@ -500,23 +529,27 @@ export function OverviewDashboard() {
   const startSteps = useMemo<StartStep[]>(
     () => [
       {
-        title: t('Create API Key'),
-        description: t('Create a key for your app or service'),
-        to: '/keys',
-        icon: KeyRound,
-        completed: Boolean(preferredKey),
-      },
-      {
         title: t('Add credits'),
-        description: t('Keep enough balance before production traffic'),
+        description: t(
+          'Redeem a code or add balance before you make your first request.'
+        ),
         to: '/wallet',
         icon: CreditCard,
         completed: remainQuota > 0 || usedQuota > 0,
       },
       {
-        title: t('Send a request'),
-        description: t('Verify routing with Playground or your client'),
-        to: '/playground',
+        title: t('Create API Key'),
+        description: t('Create a key for this app and keep it private.'),
+        to: '/keys',
+        icon: KeyRound,
+        completed: Boolean(preferredKey),
+      },
+      {
+        title: t('Copy an example and send a request'),
+        description: t(
+          'Choose a model, copy the matching example, and make a successful call.'
+        ),
+        to: '/docs',
         icon: TerminalSquare,
         completed: requestCount > 0,
       },
@@ -605,16 +638,20 @@ export function OverviewDashboard() {
   const completedStepCount = startSteps.filter((step) => step.completed).length
   const setupComplete = completedStepCount === startSteps.length
   const setupStatusReady = apiKeysQuery.isFetched && Boolean(user)
+  const savedSetupGuideExpanded =
+    setupGuidePreference.userId === user?.id
+      ? setupGuidePreference.expanded
+      : getSavedSetupGuideExpanded(user?.id)
   const setupGuideExpanded =
-    manualSetupGuideExpanded ?? (setupStatusReady && !setupComplete)
+    savedSetupGuideExpanded ?? (setupStatusReady && !setupComplete)
   const showLeftContentPanels =
     isAdmin || showApiInfoPanel || showAnnouncementsPanel || showFAQPanel
   const showContentPanels = showLeftContentPanels || showUptimePanel
 
   const handleSetupGuideToggle = () => {
     const nextExpanded = !setupGuideExpanded
-    setManualSetupGuideExpanded(nextExpanded)
-    saveSetupGuideExpanded(nextExpanded)
+    setSetupGuidePreference({ userId: user?.id, expanded: nextExpanded })
+    saveSetupGuideExpanded(nextExpanded, user?.id)
   }
 
   return (
@@ -633,11 +670,11 @@ export function OverviewDashboard() {
                         {t('Get started')}
                       </div>
                       <h3 className='text-xl font-semibold tracking-tight sm:text-2xl'>
-                        {t('Build on your API gateway in minutes')}
+                        {t('Make your first successful API request')}
                       </h3>
                       <p className='text-muted-foreground max-w-xl text-sm leading-relaxed'>
                         {t(
-                          'A focused home for keys, balance, routing, and service health.'
+                          'Add balance, create a key, then copy an example that matches your chosen model and protocol.'
                         )}
                       </p>
                     </div>
@@ -648,11 +685,11 @@ export function OverviewDashboard() {
                         onClick={handleSetupGuideToggle}
                       >
                         <ChevronUp data-icon='inline-start' />
-                        {t('Hide setup guide')}
+                        {t('Dismiss setup guide')}
                       </Button>
-                      <Button size='sm' render={<Link to='/keys' />}>
-                        <KeyRound data-icon='inline-start' />
-                        {t('Create API Key')}
+                      <Button size='sm' render={<Link to='/wallet' />}>
+                        <CreditCard data-icon='inline-start' />
+                        {t('Add credits')}
                       </Button>
                     </div>
                   </div>
