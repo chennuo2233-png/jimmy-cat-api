@@ -16,7 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { AlertTriangle, CheckCircle2, Copy, Loader2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock3,
+  Copy,
+  Loader2,
+} from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -258,6 +264,14 @@ export function USDTNetworkPaymentDialog(props: USDTNetworkPaymentDialogProps) {
                       'Payment is checked automatically after 12 Ethereum confirmations.'
                     )}
                 </p>
+                <div className='border-border/70 bg-muted/40 text-muted-foreground flex items-start gap-2 rounded-lg border p-3 text-sm leading-5'>
+                  <Clock3 className='mt-0.5 size-4 shrink-0' />
+                  <p>
+                    {t(
+                      'Payments are usually detected within about 3 minutes. If yours is not detected after 3 minutes, contact us — every payment is reviewed carefully, regardless of amount.'
+                    )}
+                  </p>
+                </div>
                 {checking && (
                   <Loader2 className='text-muted-foreground mx-auto size-4 animate-spin' />
                 )}

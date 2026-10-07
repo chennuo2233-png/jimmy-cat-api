@@ -267,6 +267,8 @@ export interface TopupRecord {
   amount: number
   /** Payment amount (actual money paid) */
   money: number
+  /** Exact amount required for on-chain payments */
+  payment_amount?: string
   /** Trade/order number */
   trade_no: string
   /** Payment method type */
