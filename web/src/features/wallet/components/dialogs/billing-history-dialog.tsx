@@ -45,6 +45,10 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
+import {
+  formatBillingCurrencyFromUSD,
+  getCurrencyDisplay,
+} from '@/lib/currency'
 import { formatNumber } from '@/lib/format'
 
 import { useBillingHistory } from '../../hooks/use-billing-history'
@@ -186,6 +190,8 @@ export function BillingHistoryDialog({
                     'usdt_erc20',
                   ].includes(record.payment_method)
                   const paymentAmount = record.payment_amount?.trim()
+                  const creditedAmountUSD =
+                    record.amount / getCurrencyDisplay().config.quotaPerUnit
                   return (
                     <div
                       key={record.id}
@@ -246,7 +252,11 @@ export function BillingHistoryDialog({
                             {t('Credited Quota')}
                           </Label>
                           <div className='text-sm font-semibold'>
-                            {formatNumber(record.amount)}
+                            {formatBillingCurrencyFromUSD(creditedAmountUSD, {
+                              digitsLarge: 2,
+                              digitsSmall: 4,
+                              abbreviate: false,
+                            })}
                           </div>
                         </div>
                         <div className='space-y-1'>
