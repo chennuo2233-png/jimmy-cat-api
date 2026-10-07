@@ -357,6 +357,8 @@ export function SignUpForm({
               key={turnstileWidgetKey}
               siteKey={turnstileSiteKey}
               onVerify={setTurnstileToken}
+              onExpire={() => setTurnstileToken('')}
+              showAuthHint
             />
           </div>
         )}

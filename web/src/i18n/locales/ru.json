@@ -2442,6 +2442,7 @@
     "https://wechat-server.example.com": "https://wechat-server.example.com",
     "https://worker.example.workers.dev": "https://worker.example.workers.dev",
     "https://your-server.example.com": "https://your-server.example.com",
+    "Human verification is required to sign in or register. If the verification box does not appear, refresh this page and try again. Continue after verification is complete.": "Для входа или регистрации требуется проверка. Если окно проверки не появилось, обновите страницу и попробуйте снова. Продолжайте после завершения проверки.",
     "Human-readable name shown to users during Passkey prompts.": "Понятное для человека имя, отображаемое пользователям во время запросов Passkey.",
     "I confirm enabling high-risk retry": "Я подтверждаю включение высокорискового повтора",
     "I have read and agree to the": "Я прочитал и согласен с",

@@ -429,6 +429,7 @@ export function UserAuthForm({
                   siteKey={turnstileSiteKey}
                   onVerify={setTurnstileToken}
                   onExpire={() => setTurnstileToken('')}
+                  showAuthHint
                 />
               </div>
             )}

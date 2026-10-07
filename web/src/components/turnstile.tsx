@@ -17,6 +17,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { cn } from '@/lib/utils'
 
 declare global {
   interface Window {
@@ -31,6 +34,7 @@ interface TurnstileProps {
   onVerify: (token: string) => void
   onExpire?: () => void
   className?: string
+  showAuthHint?: boolean
 }
 
 export function Turnstile({
@@ -38,7 +42,9 @@ export function Turnstile({
   onVerify,
   onExpire,
   className,
+  showAuthHint = false,
 }: TurnstileProps) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -72,5 +78,19 @@ export function Turnstile({
     document.head.appendChild(s)
   }, [siteKey, onVerify, onExpire])
 
-  return <div ref={ref} className={className} />
+  return (
+    <div className={cn('space-y-2', className)}>
+      <div ref={ref} />
+      {showAuthHint && (
+        <p
+          className='text-muted-foreground rounded-lg border border-dashed px-3 py-2 text-xs leading-relaxed'
+          role='status'
+        >
+          {t(
+            'Human verification is required to sign in or register. If the verification box does not appear, refresh this page and try again. Continue after verification is complete.'
+          )}
+        </p>
+      )}
+    </div>
+  )
 }

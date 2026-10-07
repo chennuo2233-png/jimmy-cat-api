@@ -2442,6 +2442,7 @@
     "https://wechat-server.example.com": "https://wechat-server.example.com",
     "https://worker.example.workers.dev": "https://worker.example.workers.dev",
     "https://your-server.example.com": "https://your-server.example.com",
+    "Human verification is required to sign in or register. If the verification box does not appear, refresh this page and try again. Continue after verification is complete.": "登入或註冊需要完成人機驗證。如未出現驗證框，請重新整理頁面後重試；驗證完成後即可繼續。",
     "Human-readable name shown to users during Passkey prompts.": "在 Passkey 提示期間向用戶顯示的人類可讀名稱。",
     "I confirm enabling high-risk retry": "我確認開啟高危重試",
     "I have read and agree to the": "我已閱讀並同意",
