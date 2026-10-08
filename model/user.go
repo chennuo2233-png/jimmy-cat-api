@@ -85,6 +85,7 @@ type User struct {
 	Role             int                        `json:"role" gorm:"type:int;default:1"`   // admin, common
 	Status           int                        `json:"status" gorm:"type:int;default:1"` // enabled, disabled
 	Email            string                     `json:"email" gorm:"index" validate:"max=50"`
+	RegisteredIP     string                     `json:"-" gorm:"column:registered_ip;type:varchar(64);index"`
 	GitHubId         string                     `json:"github_id" gorm:"column:github_id;index"`
 	DiscordId        string                     `json:"discord_id" gorm:"column:discord_id;index"`
 	OidcId           string                     `json:"oidc_id" gorm:"column:oidc_id;index"`
@@ -347,6 +348,14 @@ func EnsureEmailAvailable(email string, excludeUserID int) error {
 		return ErrEmailAlreadyTaken
 	}
 	return nil
+}
+
+func HasRecentRegistrationFromIP(ip string, since int64) (bool, error) {
+	var count int64
+	err := DB.Model(&User{}).
+		Where("registered_ip = ? AND created_at >= ?", ip, since).
+		Count(&count).Error
+	return count > 0, err
 }
 
 // withNormalizedEmailLock serializes concurrent writers that target the same

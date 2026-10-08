@@ -292,11 +292,12 @@ func Register(c *gin.Context) {
 	affCode := user.AffCode // this code is the inviter's code, not the user's own code
 	inviterId, _ := model.GetUserIdByAffCode(affCode)
 	cleanUser := model.User{
-		Username:    user.Username,
-		Password:    user.Password,
-		DisplayName: user.Username,
-		InviterId:   inviterId,
-		Role:        common.RoleCommonUser, // 明确设置角色为普通用户
+		Username:     user.Username,
+		Password:     user.Password,
+		DisplayName:  user.Username,
+		InviterId:    inviterId,
+		Role:         common.RoleCommonUser, // 明确设置角色为普通用户
+		RegisteredIP: c.ClientIP(),
 	}
 	cleanUser.SetSetting(dto.UserSetting{
 		Language: normalizeRegistrationLanguage(request.Language),
@@ -304,7 +305,17 @@ func Register(c *gin.Context) {
 	if common.EmailVerificationEnabled {
 		cleanUser.Email = user.Email
 	}
+	if err := service.ReserveRegistrationIP(c.Request.Context(), cleanUser.RegisteredIP); err != nil {
+		if errors.Is(err, service.ErrRegistrationIPLimitReached) {
+			common.ApiErrorI18n(c, i18n.MsgUserRegistrationIPLimit)
+			return
+		}
+		common.SysError(fmt.Sprintf("failed to reserve registration IP: %v", err))
+		common.ApiErrorI18n(c, i18n.MsgRetryLater)
+		return
+	}
 	if err := cleanUser.Insert(inviterId); err != nil {
+		service.ReleaseRegistrationIP(c.Request.Context(), cleanUser.RegisteredIP)
 		if errors.Is(err, model.ErrEmailAlreadyTaken) {
 			common.ApiErrorI18n(c, i18n.MsgUserEmailAlreadyTaken)
 			return

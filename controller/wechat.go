@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/i18n"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,12 +91,24 @@ func WeChatAuth(c *gin.Context) {
 		}
 	} else {
 		if common.RegisterEnabled {
+			registrationIP := c.ClientIP()
+			if err := service.ReserveRegistrationIP(c.Request.Context(), registrationIP); err != nil {
+				if errors.Is(err, service.ErrRegistrationIPLimitReached) {
+					common.ApiErrorI18n(c, i18n.MsgUserRegistrationIPLimit)
+					return
+				}
+				common.SysError(fmt.Sprintf("failed to reserve registration IP: %v", err))
+				common.ApiErrorI18n(c, i18n.MsgRetryLater)
+				return
+			}
 			user.Username = "wechat_" + strconv.Itoa(model.GetMaxUserId()+1)
 			user.DisplayName = "WeChat User"
 			user.Role = common.RoleCommonUser
 			user.Status = common.UserStatusEnabled
+			user.RegisteredIP = registrationIP
 
 			if err := user.Insert(0); err != nil {
+				service.ReleaseRegistrationIP(c.Request.Context(), registrationIP)
 				c.JSON(http.StatusOK, gin.H{
 					"success": false,
 					"message": err.Error(),

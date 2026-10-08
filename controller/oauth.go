@@ -13,6 +13,7 @@ import (
 	"github.com/QuantumNous/new-api/middleware"
 	"github.com/QuantumNous/new-api/model"
 	"github.com/QuantumNous/new-api/oauth"
+	"github.com/QuantumNous/new-api/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -329,6 +330,19 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 	if !common.RegisterEnabled {
 		return nil, &OAuthRegistrationDisabledError{}
 	}
+	registrationIP := c.ClientIP()
+	if err := service.ReserveRegistrationIP(c.Request.Context(), registrationIP); err != nil {
+		if errors.Is(err, service.ErrRegistrationIPLimitReached) {
+			return nil, &OAuthRegistrationIPLimitError{}
+		}
+		return nil, err
+	}
+	registrationReserved := true
+	defer func() {
+		if registrationReserved {
+			service.ReleaseRegistrationIP(c.Request.Context(), registrationIP)
+		}
+	}()
 
 	// Set up new user
 	user.Username = provider.GetProviderPrefix() + strconv.Itoa(model.GetMaxUserId()+1)
@@ -360,6 +374,7 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 	}
 	user.Role = common.RoleCommonUser
 	user.Status = common.UserStatusEnabled
+	user.RegisteredIP = registrationIP
 
 	// Handle affiliate code
 	inviterId := 0
@@ -424,6 +439,7 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 		// Perform post-transaction tasks
 		user.FinalizeOAuthUserCreation(inviterId)
 	}
+	registrationReserved = false
 
 	return user, nil
 }
@@ -439,6 +455,12 @@ type OAuthRegistrationDisabledError struct{}
 
 func (e *OAuthRegistrationDisabledError) Error() string {
 	return "registration is disabled"
+}
+
+type OAuthRegistrationIPLimitError struct{}
+
+func (e *OAuthRegistrationIPLimitError) Error() string {
+	return "registration IP limit reached"
 }
 
 type OAuthEmailAlreadyTakenError struct{}
@@ -460,6 +482,8 @@ func handleOAuthError(c *gin.Context, err error) {
 		common.ApiErrorMsg(c, e.Message)
 	case *oauth.TrustLevelError:
 		common.ApiErrorI18n(c, i18n.MsgOAuthTrustLevelLow)
+	case *OAuthRegistrationIPLimitError:
+		common.ApiErrorI18n(c, i18n.MsgUserRegistrationIPLimit)
 	default:
 		common.ApiError(c, err)
 	}
