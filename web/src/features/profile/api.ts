@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import i18n from '@/i18n/config'
 import { api } from '@/lib/api'
 import type { CustomOAuthBinding } from '@/lib/oauth'
 import type { LoginSession } from '@/stores/auth-store'
@@ -103,7 +104,10 @@ export async function sendEmailVerification(
   email: string,
   turnstileToken?: string
 ): Promise<ApiResponse> {
-  const params = new URLSearchParams({ email })
+  const params = new URLSearchParams({
+    email,
+    language: i18n.resolvedLanguage || i18n.language || 'en',
+  })
   if (turnstileToken) {
     params.append('turnstile', turnstileToken)
   }

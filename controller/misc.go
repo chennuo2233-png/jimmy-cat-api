@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 
@@ -283,10 +284,12 @@ func SendEmailVerification(c *gin.Context) {
 	}
 	code := common.GenerateVerificationCode(6)
 	common.RegisterVerificationCodeWithKey(email, code, common.EmailVerificationPurpose)
-	subject := fmt.Sprintf("%s邮箱验证邮件", common.SystemName)
-	content := fmt.Sprintf("<p>您好，你正在进行%s邮箱验证。</p>"+
-		"<p>您的验证码为: <strong>%s</strong></p>"+
-		"<p>验证码 %d 分钟内有效，如果不是本人操作，请忽略。</p>", common.SystemName, code, common.VerificationValidMinutes)
+	subject, content := buildEmailVerificationMessage(
+		c.Query("language"),
+		common.SystemName,
+		code,
+		common.VerificationValidMinutes,
+	)
 	err := common.SendEmail(subject, email, content)
 	if err != nil {
 		common.ApiError(c, err)
@@ -297,6 +300,111 @@ func SendEmailVerification(c *gin.Context) {
 		"message": "",
 	})
 	return
+}
+
+type verificationEmailCopy struct {
+	Subject   string
+	Greeting  string
+	Action    string
+	CodeLabel string
+	Expiry    string
+}
+
+var verificationEmailCopies = map[string]verificationEmailCopy{
+	"en": {
+		Subject:   "Email verification code",
+		Greeting:  "Hello,",
+		Action:    "You are verifying your email address for %s.",
+		CodeLabel: "Your verification code is:",
+		Expiry:    "This code expires in %d minutes. If you did not request it, you can safely ignore this email.",
+	},
+	"zhCN": {
+		Subject:   "邮箱验证码",
+		Greeting:  "您好，",
+		Action:    "您正在为 %s 验证电子邮箱。",
+		CodeLabel: "您的验证码为：",
+		Expiry:    "验证码将在 %d 分钟后失效；如果这不是您本人操作，请忽略此邮件。",
+	},
+	"zhTW": {
+		Subject:   "電子郵件驗證碼",
+		Greeting:  "您好，",
+		Action:    "您正在為 %s 驗證電子郵件地址。",
+		CodeLabel: "您的驗證碼為：",
+		Expiry:    "驗證碼將在 %d 分鐘後失效；若非您本人操作，請忽略此郵件。",
+	},
+	"fr": {
+		Subject:   "Code de vérification de l’e-mail",
+		Greeting:  "Bonjour,",
+		Action:    "Vous validez votre adresse e-mail pour %s.",
+		CodeLabel: "Votre code de vérification est :",
+		Expiry:    "Ce code expire dans %d minutes. Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail.",
+	},
+	"ja": {
+		Subject:   "メール認証コード",
+		Greeting:  "こんにちは、",
+		Action:    "%s のメールアドレスを確認しています。",
+		CodeLabel: "認証コード：",
+		Expiry:    "このコードは %d 分間有効です。心当たりがない場合は、このメールを無視してください。",
+	},
+	"ru": {
+		Subject:   "Код подтверждения электронной почты",
+		Greeting:  "Здравствуйте,",
+		Action:    "Вы подтверждаете адрес электронной почты для %s.",
+		CodeLabel: "Ваш код подтверждения:",
+		Expiry:    "Код действителен в течение %d минут. Если это были не вы, просто проигнорируйте это письмо.",
+	},
+	"vi": {
+		Subject:   "Mã xác minh email",
+		Greeting:  "Xin chào,",
+		Action:    "Bạn đang xác minh địa chỉ email cho %s.",
+		CodeLabel: "Mã xác minh của bạn:",
+		Expiry:    "Mã này có hiệu lực trong %d phút. Nếu không phải bạn yêu cầu, hãy bỏ qua email này.",
+	},
+}
+
+func normalizeVerificationEmailLanguage(language string) string {
+	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(language), "_", "-")) {
+	case "zh", "zh-cn", "zh-hans", "zhcn":
+		return "zhCN"
+	case "zh-tw", "zh-hk", "zh-mo", "zh-hant", "zhtw":
+		return "zhTW"
+	case "fr", "ja", "ru", "vi":
+		return strings.ToLower(strings.TrimSpace(language))
+	case "en":
+		return "en"
+	default:
+		return "en"
+	}
+}
+
+func buildEmailVerificationMessage(language string, systemName string, code string, validMinutes int) (string, string) {
+	language = normalizeVerificationEmailLanguage(language)
+	nativeCopy := verificationEmailCopies[language]
+	englishCopy := verificationEmailCopies["en"]
+	escapedSystemName := html.EscapeString(systemName)
+	escapedCode := html.EscapeString(code)
+
+	nativeContent := fmt.Sprintf(
+		"<p>%s</p><p>%s</p><p>%s <strong>%s</strong></p><p>%s</p>",
+		nativeCopy.Greeting,
+		fmt.Sprintf(nativeCopy.Action, escapedSystemName),
+		nativeCopy.CodeLabel,
+		escapedCode,
+		fmt.Sprintf(nativeCopy.Expiry, validMinutes),
+	)
+	if language == "en" {
+		return fmt.Sprintf("%s: %s", systemName, englishCopy.Subject), nativeContent
+	}
+
+	englishContent := fmt.Sprintf(
+		"<p><strong>English</strong></p><p>%s</p><p>%s</p><p>%s <strong>%s</strong></p><p>%s</p>",
+		englishCopy.Greeting,
+		fmt.Sprintf(englishCopy.Action, escapedSystemName),
+		englishCopy.CodeLabel,
+		escapedCode,
+		fmt.Sprintf(englishCopy.Expiry, validMinutes),
+	)
+	return fmt.Sprintf("%s: %s / %s", systemName, nativeCopy.Subject, englishCopy.Subject), nativeContent + "<hr>" + englishContent
 }
 
 func SendPasswordResetEmail(c *gin.Context) {
