@@ -66,6 +66,7 @@ import type {
   CreateFinancialEntryInput,
   FinancialCategory,
   FinancialDirection,
+  FinancialEntry,
 } from './types'
 
 function getBeijingDate(): string {
@@ -170,8 +171,20 @@ export function FinancialReportSection() {
   const categoryLabel = (category: FinancialCategory) => {
     if (category === 'other_income') return t('Other income')
     if (category === 'upstream_purchase') return t('Upstream purchase')
-    if (category === 'customer_test') return t('Customer testing')
+    if (category === 'customer_test') return t('Customer test cost')
     return t('Other expense')
+  }
+
+  const entryRateLabel = (item: FinancialEntry) => {
+    if (item.currency !== 'CNY') {
+      return t('1 {{currency}} = 1 USD', { currency: item.currency })
+    }
+    const rate = Number(item.exchange_rate)
+    return t('1 USD = CNY {{rate}}', {
+      rate: Number.isFinite(rate)
+        ? rate.toLocaleString(undefined, { maximumFractionDigits: 6 })
+        : item.exchange_rate,
+    })
   }
 
   const changeDirection = (direction: FinancialDirection) => {
@@ -274,13 +287,38 @@ export function FinancialReportSection() {
         />
       </div>
 
-      <div className='grid gap-4 xl:grid-cols-[minmax(0,1fr)_23rem]'>
+      <div className='grid gap-4 xl:grid-cols-2'>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('Income breakdown')}</CardTitle>
+            <CardDescription>
+              {t(
+                'Successful customer recharges are recorded automatically. Add other income manually.'
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='grid gap-3 sm:grid-cols-3'>
+            <FinancialBreakdown
+              label={t('Customer recharges')}
+              value={formatUSD(summary?.customer_top_up_usd ?? '0')}
+            />
+            <FinancialBreakdown
+              label={t('Other income')}
+              value={formatUSD(summary?.other_income_usd ?? '0')}
+            />
+            <FinancialBreakdown
+              label={t('Total income')}
+              value={formatUSD(summary?.total_income_usd ?? '0')}
+            />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>{t('Expense breakdown')}</CardTitle>
             <CardDescription>
               {t(
-                'Manual costs are kept separately from automatic customer recharge income.'
+                'Record upstream purchases, customer test costs, and other expenses manually.'
               )}
             </CardDescription>
           </CardHeader>
@@ -290,7 +328,7 @@ export function FinancialReportSection() {
               value={formatUSD(summary?.upstream_purchase_usd ?? '0')}
             />
             <FinancialBreakdown
-              label={t('Customer testing')}
+              label={t('Customer test cost')}
               value={formatUSD(summary?.customer_test_usd ?? '0')}
             />
             <FinancialBreakdown
@@ -299,39 +337,39 @@ export function FinancialReportSection() {
             />
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('CNY exchange rate')}</CardTitle>
-            <CardDescription>
-              {t(
-                'Used for future CNY entries only. Existing records keep their original rate.'
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='flex gap-2'>
-            <Input
-              aria-label={t('CNY per USD')}
-              inputMode='decimal'
-              value={cnyPerUSD}
-              onChange={(event) => setCnyPerUSD(event.target.value)}
-            />
-            <Button
-              onClick={saveExchangeRate}
-              disabled={exchangeRateMutation.isPending}
-            >
-              {t('Save')}
-            </Button>
-          </CardContent>
-        </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('CNY exchange rate')}</CardTitle>
+          <CardDescription>
+            {t(
+              'Used for future CNY entries only. Existing records keep their original rate.'
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='flex max-w-lg gap-2'>
+          <Input
+            aria-label={t('CNY per USD')}
+            inputMode='decimal'
+            value={cnyPerUSD}
+            onChange={(event) => setCnyPerUSD(event.target.value)}
+          />
+          <Button
+            onClick={saveExchangeRate}
+            disabled={exchangeRateMutation.isPending}
+          >
+            {t('Save')}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>{t('Add manual entry')}</CardTitle>
           <CardDescription>
             {t(
-              'Record upstream purchases, customer testing costs, or one-off income and expenses.'
+              'Customer recharges are recorded automatically. Add only independent income or expenses here.'
             )}
           </CardDescription>
         </CardHeader>
@@ -474,6 +512,7 @@ export function FinancialReportSection() {
                 <TableHead>{t('Date')}</TableHead>
                 <TableHead>{t('Type')}</TableHead>
                 <TableHead>{t('Amount')}</TableHead>
+                <TableHead>{t('Rate at entry')}</TableHead>
                 <TableHead>{t('USD value')}</TableHead>
                 <TableHead>{t('Note')}</TableHead>
                 <TableHead className='w-20 text-right'>{t('Action')}</TableHead>
@@ -496,6 +535,9 @@ export function FinancialReportSection() {
                     </TableCell>
                     <TableCell>
                       {item.amount} {item.currency}
+                    </TableCell>
+                    <TableCell className='text-sm whitespace-nowrap'>
+                      {entryRateLabel(item)}
                     </TableCell>
                     <TableCell>{formatUSD(item.usd_value)}</TableCell>
                     <TableCell className='max-w-80 truncate'>
@@ -523,7 +565,7 @@ export function FinancialReportSection() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className='text-muted-foreground h-24 text-center'
                   >
                     {reportQuery.isLoading
