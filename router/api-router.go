@@ -139,12 +139,16 @@ func SetApiRouter(router *gin.Engine) {
 			}
 
 			adminRoute := userRoute.Group("/")
-			adminRoute.Use(middleware.AdminAuth())
-			{
-				adminRoute.GET("/", controller.GetAllUsers)
-				adminRoute.GET("/topup", controller.GetAllTopUps)
-				adminRoute.POST("/topup/complete", controller.AdminCompleteTopUp)
-				adminRoute.GET("/search", controller.SearchUsers)
+		adminRoute.Use(middleware.AdminAuth())
+		{
+			adminRoute.GET("/", controller.GetAllUsers)
+			adminRoute.GET("/topup", controller.GetAllTopUps)
+			adminRoute.POST("/topup/complete", controller.AdminCompleteTopUp)
+			adminRoute.GET("/finance", controller.GetFinancialReport)
+			adminRoute.POST("/finance/entries", controller.CreateFinancialEntry)
+			adminRoute.DELETE("/finance/entries/:id", controller.DeleteFinancialEntry)
+			adminRoute.PUT("/finance/exchange-rate", controller.UpdateFinancialExchangeRate)
+			adminRoute.GET("/search", controller.SearchUsers)
 				adminRoute.GET("/:id/oauth/bindings", controller.GetUserOAuthBindingsByAdmin)
 				adminRoute.DELETE("/:id/oauth/bindings/:provider_id", controller.UnbindCustomOAuthByAdmin)
 				adminRoute.DELETE("/:id/bindings/:binding_type", controller.AdminClearUserBinding)

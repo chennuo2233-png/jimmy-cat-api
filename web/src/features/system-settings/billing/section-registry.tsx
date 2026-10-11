@@ -25,6 +25,7 @@ import { PaymentSettingsSection } from '../integrations/payment-settings-section
 import { RatioSettingsCard } from '../models/ratio-settings-card'
 import type { BillingSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
+import { FinancialReportSection } from './financial/financial-report-section'
 
 const getModelDefaults = (settings: BillingSettings) => ({
   ModelPrice: settings.ModelPrice,
@@ -213,6 +214,11 @@ const BILLING_SECTIONS = [
         }}
       />
     ),
+  },
+  {
+    id: 'financial-report',
+    titleKey: 'Financial Report',
+    build: () => <FinancialReportSection />,
   },
 ] as const
 
