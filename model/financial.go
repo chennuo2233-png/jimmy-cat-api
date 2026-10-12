@@ -164,6 +164,17 @@ func GetFinancialSummary(startAt int64, endAt int64) (*FinancialSummary, error) 
 		return nil, err
 	}
 
+	var rootUserIDs []int
+	if err = DB.Model(&User{}).
+		Where("role = ?", common.RoleRootUser).
+		Pluck("id", &rootUserIDs).Error; err != nil {
+		return nil, err
+	}
+	rootUserIDSet := make(map[int]struct{}, len(rootUserIDs))
+	for _, id := range rootUserIDs {
+		rootUserIDSet[id] = struct{}{}
+	}
+
 	var topUps []*TopUp
 	if err = DB.Where("status = ?", common.TopUpStatusSuccess).Find(&topUps).Error; err != nil {
 		return nil, err
@@ -172,6 +183,9 @@ func GetFinancialSummary(startAt int64, endAt int64) (*FinancialSummary, error) 
 	customerTopUp := decimal.Zero
 	customerTopUpCount := 0
 	for _, topUp := range topUps {
+		if _, isRootUserTopUp := rootUserIDSet[topUp.UserId]; isRootUserTopUp {
+			continue
+		}
 		occurredAt := topUp.CompleteTime
 		if occurredAt <= 0 {
 			occurredAt = topUp.CreateTime
