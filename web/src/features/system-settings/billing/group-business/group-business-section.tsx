@@ -8,7 +8,7 @@ License, or (at your option) any later version.
 */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, RefreshCw, Trash2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -43,7 +43,11 @@ import {
   getGroupBusinessOverview,
   getGroupBusinessSnapshotDetails,
 } from './api'
-import type { GroupBusinessLedgerType, GroupBusinessSnapshot } from './types'
+import type {
+  GroupBusinessLedgerType,
+  GroupBusinessProduct,
+  GroupBusinessSnapshot,
+} from './types'
 
 function beijingDate(timestamp?: number): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -150,6 +154,17 @@ export function GroupBusinessSection() {
   })
   const data = overviewQuery.data
   const selectedProduct = data?.products.find((item) => item.id === productId)
+
+  // A product is the entry point for this page. Keeping the first product
+  // selected makes the sales, customer and ledger forms available immediately
+  // after an administrator creates the first product or opens this page again.
+  useEffect(() => {
+    if (productId !== undefined || !data?.products.length) {
+      return
+    }
+    setProductId(data.products[0].id)
+  }, [data?.products, productId])
+
   const requiresCustomer = customerLedgerTypes.has(ledger.type)
   const isPaymentOrRefund =
     ledger.type === 'payment' || ledger.type === 'refund'
@@ -170,7 +185,13 @@ export function GroupBusinessSection() {
     mutate.mutate(
       { path: 'products', payload: product },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          const createdProduct = response.data as
+            | GroupBusinessProduct
+            | undefined
+          if (createdProduct?.id) {
+            setProductId(createdProduct.id)
+          }
           setProduct({ ...product, name: '', group_name: '' })
           void refresh()
         },
@@ -386,7 +407,14 @@ export function GroupBusinessSection() {
             <Select
               value={productId?.toString()}
               onValueChange={(value) => {
-                setProductId(Number(value))
+                const nextProductId = Number(value)
+                if (
+                  !Number.isSafeInteger(nextProductId) ||
+                  nextProductId <= 0
+                ) {
+                  return
+                }
+                setProductId(nextProductId)
                 setSelectedSnapshot(undefined)
               }}
             >
@@ -436,7 +464,7 @@ export function GroupBusinessSection() {
         </Card>
       </div>
 
-      {productId && (
+      {selectedProduct && (
         <div className='grid gap-4 xl:grid-cols-2'>
           <Card>
             <CardHeader>
@@ -683,7 +711,7 @@ export function GroupBusinessSection() {
         </div>
       )}
 
-      {productId && (
+      {selectedProduct && (
         <Card>
           <CardHeader>
             <CardTitle>每日封存与利润结算</CardTitle>
@@ -767,7 +795,7 @@ export function GroupBusinessSection() {
         </Card>
       )}
 
-      {productId && (
+      {selectedProduct && (
         <Card>
           <CardHeader>
             <CardTitle>当前筛选区间的手工账目</CardTitle>
